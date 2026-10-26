@@ -14,6 +14,8 @@ export interface TransportHooks {
   onEveryPush?: () => void;
   failAfterPush?: boolean;
   failOnPullPage?: number;
+  /** Every push call's answer, in order; `hookedTransport` creates it when absent. */
+  pushLog?: PushResult[];
 }
 
 /** Each step's report with ids and times normalised (lists → 'household'/'other', users →
@@ -36,7 +38,7 @@ export interface Device {
   db: SyncDb;
   sync: Sync;
   hooks: TransportHooks;
-  pushLog: PushResult[]; // filled by hookedTransport with every push answer
+  pushLog: PushResult[]; // `hooks.pushLog`: filled by hookedTransport with every push answer
 }
 
 export interface World {
@@ -49,19 +51,16 @@ export interface World {
   dispose(): Promise<void>;
 }
 
-/** Wraps a transport with the test hooks; every push answer is appended to `pushLog` (the
- *  answer is logged even when `failAfterPush` then loses it on the way back to the phone). */
-export function hookedTransport(
-  inner: SyncTransport,
-  hooks: TransportHooks,
-  pushLog?: PushResult[],
-): SyncTransport {
+/** Wraps a transport with the test hooks; every push answer is appended to `hooks.pushLog`
+ *  (created here when absent; an answer is logged even when `failAfterPush` then loses it). */
+export function hookedTransport(inner: SyncTransport, hooks: TransportHooks): SyncTransport {
+  const pushLog = (hooks.pushLog ??= []);
   let failAt: number | undefined;
   let pulls = 0;
   return {
     async push(changes) {
       const res = await inner.push(changes);
-      pushLog?.push(structuredClone(res));
+      pushLog.push(structuredClone(res));
       const once = hooks.onPushSent;
       hooks.onPushSent = undefined;
       once?.();
@@ -135,7 +134,26 @@ function rowsOf(db: SyncDb): unknown[] {
 
 /** Replaces the world's ids (lists, users, pair ids made from them) with stable names, drops
  *  `updated_at` and normalises `deleted_at` to ISO, so two servers' transcripts compare. */
-function normaliser(world: World): (v: unknown) => unknown {
+/** Keys whose string values are ids; free text (titles, …) is never rewritten. */
+const ID_KEYS: ReadonlySet<string> = new Set([
+  'id',
+  'list_id',
+  'updated_by',
+  'member_id',
+  'a_id',
+  'b_id',
+  'row_id',
+  'listsLost',
+  'userId',
+  'ownerId',
+]);
+
+export type NamedIds = Pick<World, 'listId' | 'otherListId'> & {
+  will: { userId: string };
+  katie: { userId: string };
+};
+
+export function normaliser(world: NamedIds): (v: unknown) => unknown {
   const names = new Map<string, string>([
     [world.listId, 'household'],
     [world.otherListId, 'other'],
@@ -157,9 +175,9 @@ function normaliser(world: World): (v: unknown) => unknown {
   const walk = (v: unknown, key?: string): unknown => {
     if (typeof v === 'string') {
       if (key === 'deleted_at') return new Date(v).toISOString();
-      return names.get(v) ?? v;
+      return key !== undefined && ID_KEYS.has(key) ? (names.get(v) ?? v) : v;
     }
-    if (Array.isArray(v)) return v.map((x) => walk(x));
+    if (Array.isArray(v)) return v.map((x) => walk(x, key)); // listsLost: ['…']
     if (v !== null && typeof v === 'object') {
       const out: Row = {};
       for (const [k, x] of Object.entries(v)) {
@@ -427,7 +445,7 @@ export const SCENARIOS: readonly Scenario[] = [
 
   scenario('S11 a row cannot change list', async (w, rec) => {
     await rec.run('katie'); // learns both lists
-    insertItem(w.katie.db, { id: I1, title: 'k', listId: w.listId });
+    insertItem(w.katie.db, { id: I1, title: 'moved item', listId: w.listId });
     await rec.run('katie');
     expect(await w.serverRow(T, I1)).toMatchObject({ list_id: w.listId });
     w.katie.db.run(sql`update ww_test_item set list_id = ${w.otherListId} where id = ${I1}`);

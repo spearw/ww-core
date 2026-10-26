@@ -13,7 +13,8 @@ import {
 } from '../index';
 import type { SyncDb } from '../types';
 import { makeFakeWorld } from './fakeWorld';
-import { collectTranscripts, sid } from './scenarios';
+import { collectTranscripts, hookedTransport, normaliser, sid } from './scenarios';
+import type { TransportHooks } from './scenarios';
 import type { World } from './scenarios';
 import { countItems, cursorOf, freshDb, insertItem, outbox, updateTitle } from './testDb';
 import { testItem, testPair } from './testSchema';
@@ -249,4 +250,70 @@ it('two fake worlds give identical, normalised transcripts', async () => {
     { table_name: 'ww_member_profile', row_id: 'pair(household,will)', reason: 'not_allowed' },
   ]);
   expect(JSON.stringify(a)).not.toContain('updated_at');
+});
+
+it('a push that makes no progress ends the run unsettled instead of looping', async () => {
+  const server = createFakeServer({ tables: { ww_test_item: serverColumnsOf(testItem) } });
+  const L = server.createList('w', 'Home', [{ userId: 'w', displayName: 'Will' }]);
+  const inner = server.transportFor('w');
+  let pushCalls = 0;
+  const db = await freshDb({ ...wwLocalTables, testItem });
+  installSync(db, [testItem]);
+  const sync = createSync({
+    db,
+    tables: [testItem],
+    transport: {
+      push: async () => {
+        pushCalls += 1;
+        return { accepted: [], rejected: [] }; // answers nothing for the batch
+      },
+      pull: (cursors, limit) => inner.pull(cursors, limit),
+    },
+  });
+  bulk(db, L, PUSH_BATCH); // a full batch, so only the guard can stop the push loop
+  const r = await sync.run();
+  expect(r.settled).toBe(false);
+  expect(r.rounds).toBe(MAX_ROUNDS);
+  expect(pushCalls).toBe(MAX_ROUNDS - 1); // round 1 learns the list; one push a round after
+  expect(outbox(db)).toHaveLength(PUSH_BATCH);
+});
+
+it('hookedTransport with two arguments logs every push answer in hooks.pushLog', async () => {
+  const server = createFakeServer({ tables: { ww_test_item: serverColumnsOf(testItem) } });
+  const L = server.createList('w', 'Home', [{ userId: 'w', displayName: 'Will' }]);
+  const hooks: TransportHooks = {};
+  const t = hookedTransport(server.transportFor('w'), hooks);
+  await t.push([{ table: 'ww_test_item', row: { id: 'a', list_id: L, title: 'A' } }]);
+  await t.push([{ table: 'nope', row: { id: 'b', list_id: L } }]);
+  expect(hooks.pushLog).toHaveLength(2);
+  expect(hooks.pushLog![0]!.accepted.map((a) => a.id)).toEqual(['a']);
+  expect(hooks.pushLog![1]!.rejected).toEqual([
+    { table: 'nope', id: 'b', reason: 'unknown_table' },
+  ]);
+});
+
+it('the transcript normaliser rewrites ids only, never free text', () => {
+  const n = normaliser({
+    listId: 'L',
+    otherListId: 'O',
+    will: { userId: 'w' },
+    katie: { userId: 'k' },
+  });
+  expect(n({ id: 'k', title: 'k', updated_by: 'k' })).toEqual({
+    id: 'katie',
+    title: 'k',
+    updated_by: 'katie',
+  });
+  expect(
+    n({ listsLost: ['L'], tags: ['k', 'L'], list_id: 'O', row_id: 'w', member_id: 'w' }),
+  ).toEqual({
+    listsLost: ['household'],
+    tags: ['k', 'L'],
+    list_id: 'other',
+    row_id: 'will',
+    member_id: 'will',
+  });
+  expect(n({ updated_at: 'x', deleted_at: '2026-01-02T00:00:00+00:00' })).toEqual({
+    deleted_at: '2026-01-02T00:00:00.000Z',
+  });
 });

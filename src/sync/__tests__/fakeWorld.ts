@@ -4,7 +4,6 @@ import { wwLocalTables, wwMemberProfile, wwSyncedTables } from '../../db';
 import { createFakeServer, serverColumnsOf } from '../fakeServer';
 import { createSync, installSync } from '../index';
 import type { SyncLimits } from '../index';
-import type { PushResult } from '../types';
 import { hookedTransport } from './scenarios';
 import type { Device, TransportHooks, World } from './scenarios';
 import { freshDb } from './testDb';
@@ -33,12 +32,11 @@ export async function makeFakeWorld(
   async function device(userId: string, limits?: SyncLimits): Promise<Device> {
     const db = await freshDb({ ...wwLocalTables, ...wwSyncedTables, testItem, testPair });
     installSync(db, tables);
-    const hooks: TransportHooks = {};
-    const pushLog: PushResult[] = [];
-    const transport = hookedTransport(server.transportFor(userId), hooks, pushLog);
+    const hooks: TransportHooks = { pushLog: [] };
+    const transport = hookedTransport(server.transportFor(userId), hooks);
     const sync = createSync({ db, tables, transport, limits });
     closers.push(() => (db as unknown as { $client: { close(): void } }).$client.close());
-    return { userId, db, sync, hooks, pushLog };
+    return { userId, db, sync, hooks, pushLog: hooks.pushLog! };
   }
 
   return {

@@ -151,7 +151,10 @@ export function createSync(opts: {
       });
       if (batch.size === 0) return;
       const result = await transport.push([...batch.values()].map((s) => s.change));
-      applying((tx) => {
+      // Liveness: a batch that removes no outbox entry (answers missing, or every entry
+      // rewritten meanwhile) would be re-sent forever; stop, and leave them pending for the round.
+      const progressed = applying((tx) => {
+        let deleted = 0;
         for (const a of result.accepted) {
           const s = batch.get(keyOf(a.table, a.id));
           if (!s) continue;
@@ -161,6 +164,7 @@ export function createSync(opts: {
           // Otherwise keep the entry and the local row; it pushes next round.
           if (outboxSeq(tx, a.table, a.id) === s.seq) {
             tx.run(sql`DELETE FROM ww_outbox WHERE seq = ${s.seq}`);
+            deleted += 1;
             upsert(tx, s.table, fromWire(s.table, a.row));
           }
         }
@@ -169,14 +173,16 @@ export function createSync(opts: {
           const s = batch.get(keyOf(r.table, r.id));
           if (!s) continue;
           report.rejected += 1;
+          if (outboxSeq(tx, r.table, r.id) === s.seq) deleted += 1;
           tx.run(sql`DELETE FROM ww_outbox WHERE seq = ${s.seq}`);
           tx.run(
             sql`INSERT INTO ww_reject (table_name, row_id, reason, at)
                 VALUES (${r.table}, ${r.id}, ${r.reason}, ${at})`,
           );
         }
+        return deleted > 0;
       });
-      if (batch.size < PUSH_BATCH) return;
+      if (!progressed || batch.size < PUSH_BATCH) return;
     }
   }
 
