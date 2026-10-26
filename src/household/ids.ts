@@ -90,7 +90,12 @@ export function uuidv5(namespace: string, name: string): string {
   return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
 }
 
-/** Id of a row that exists once per pair (impact for one member, dependency edge, profile). */
+/**
+ * Id of a row that exists once per pair (impact for one member, dependency edge, profile).
+ * A pair-id row must never be tombstoned (`deleted_at`): deletion is final on the server, so
+ * the same id could never be created again. Removal is a value column the app owns (e.g.
+ * `removed_at`), which a later write can clear.
+ */
 export function pairId(a: string, b: string): string {
   return uuidv5(WW_NAMESPACE, `${a}:${b}`);
 }

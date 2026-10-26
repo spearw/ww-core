@@ -51,6 +51,7 @@ Migrations are immutable. Copy the package's into the app's Supabase project:
 npx tsx node_modules/@ww/core/scripts/copy-migrations.ts supabase/migrations
 ```
 
+The copier runs under `tsx`, so the app needs `tsx` as a devDependency.
 It copies the `*.sql` files the destination lacks (never `seed.sql`) and fails with
 `ww-core: <file> differs from the package copy` if a same-named file has been edited. Run it
 again after upgrading the pin.
@@ -91,8 +92,28 @@ select ww_make_synced('public.project');
 
 `ww_make_synced` adds `list_id` (foreign key to `ww_list`, cascade), `updated_at`,
 `updated_by`, `deleted_at`, the server sequence `ww_seq`, the stamping trigger, row-level
-security for list members, and registers the table for `ww_push` / `ww_pull`. The table name
-must match on both sides.
+security for list members (restrictive too, so a permissive policy the app adds later cannot
+widen it), and registers the table for `ww_push` / `ww_pull`. The table name must match on both
+sides. A `list_id` foreign key the table already has must be `on delete cascade`.
+
+### Rules for synced tables
+
+- **Call `ww_make_synced` before inserting rows.** Rows that already exist are stamped with a
+  `ww_seq` by the call, so they do reach the next pull, but they carry no `updated_by` and the
+  migration's `updated_at`.
+- **No secondary unique constraints** on a synced table (server or phone). A push that would
+  violate one is answered `not_allowed` (it reads as a row hidden by RLS) and is never retried.
+- **No local-only foreign keys pointing at synced rows.** A pull deletes a lost list's rows and
+  applies rows across tables in seq order; a phone-only foreign key into them can fail the
+  whole pull.
+- **Pair-id rows are never tombstoned.** A row whose id is `pairId(a, b)` (one per pair: a
+  member's impact, a dependency edge, a profile) must be removed with a value column the app
+  owns (e.g. `removed_at`), never `deleted_at`: deletion is final (R6), so a tombstoned pair id
+  can never be created again.
+- Ids are UUIDs and travel lowercase; an uppercase local id is renamed to the server's
+  lowercase one when its push is answered.
+- A personal list (`ww_list.is_personal = 1`) is phone-only: its rows never push, and a pull
+  never removes or replaces it.
 
 ## Household
 
