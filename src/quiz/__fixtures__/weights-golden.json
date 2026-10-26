@@ -1,0 +1,1311 @@
+{
+ "adjusts": [
+  {
+   "criterion": "enablement",
+   "expect": {
+    "enablement": 0.5,
+    "finance": 0.13432477414282074,
+    "risk": 0.23135045171435858,
+    "value": 0.13432477414282074
+   },
+   "name": "raise-worst",
+   "target": 0.5,
+   "weights": {
+    "enablement": 0.13410769770397965,
+    "finance": 0.23262157587583998,
+    "risk": 0.40064915054434047,
+    "value": 0.23262157587583998
+   }
+  },
+  {
+   "criterion": "risk",
+   "expect": {
+    "enablement": 0.21256716818619603,
+    "finance": 0.36871641590690196,
+    "risk": 0.05,
+    "value": 0.36871641590690196
+   },
+   "name": "lower-best",
+   "target": 0.05,
+   "weights": {
+    "enablement": 0.13410769770397965,
+    "finance": 0.23262157587583998,
+    "risk": 0.40064915054434047,
+    "value": 0.23262157587583998
+   }
+  },
+  {
+   "criterion": "value",
+   "expect": {
+    "enablement": 0.11359454575111023,
+    "finance": 0.19703971282730712,
+    "risk": 0.33936574142158266,
+    "value": 0.35
+   },
+   "name": "snap-middle",
+   "target": 0.33,
+   "weights": {
+    "enablement": 0.13410769770397965,
+    "finance": 0.23262157587583998,
+    "risk": 0.40064915054434047,
+    "value": 0.23262157587583998
+   }
+  },
+  {
+   "criterion": "finance",
+   "expect": {
+    "enablement": 0.14854671367452874,
+    "finance": 0.15,
+    "risk": 0.44378596955130034,
+    "value": 0.2576673167741708
+   },
+   "name": "half-step-rounds-up",
+   "target": 0.125,
+   "weights": {
+    "enablement": 0.13410769770397965,
+    "finance": 0.23262157587583998,
+    "risk": 0.40064915054434047,
+    "value": 0.23262157587583998
+   }
+  },
+  {
+   "criterion": "finance",
+   "expect": {
+    "enablement": 0.08738041980854633,
+    "finance": 0.5,
+    "risk": 0.26105057032429435,
+    "value": 0.15156900986715932
+   },
+   "name": "above-cap",
+   "target": 0.9,
+   "weights": {
+    "enablement": 0.13410769770397965,
+    "finance": 0.23262157587583998,
+    "risk": 0.40064915054434047,
+    "value": 0.23262157587583998
+   }
+  },
+  {
+   "criterion": "finance",
+   "expect": {
+    "enablement": 0.166022797636238,
+    "finance": 0.05,
+    "risk": 0.4959960836161592,
+    "value": 0.2879811187476027
+   },
+   "name": "below-floor",
+   "target": -1.0,
+   "weights": {
+    "enablement": 0.13410769770397965,
+    "finance": 0.23262157587583998,
+    "risk": 0.40064915054434047,
+    "value": 0.23262157587583998
+   }
+  },
+  {
+   "criterion": "value",
+   "expect": {
+    "enablement": 0.05,
+    "finance": 0.1334473271916554,
+    "risk": 0.31655267280834465,
+    "value": 0.5
+   },
+   "name": "raise-middle-floors-worst",
+   "target": 0.5,
+   "weights": {
+    "enablement": 0.07843563281978526,
+    "finance": 0.2107821835901074,
+    "risk": 0.5,
+    "value": 0.2107821835901074
+   }
+  }
+ ],
+ "constants": {
+  "balancerSpread": 0.1,
+  "cap": 0.5,
+  "defaultWeights": {
+   "enablement": 0.1,
+   "finance": 0.2,
+   "risk": 0.4,
+   "value": 0.3
+  },
+  "flavourMargin": 0.08,
+  "floor": 0.05,
+  "lambda": 0.75,
+  "recheckThreshold": 1.3862943611198906,
+  "tierStep": 2.0
+ },
+ "estimates": [
+  {
+   "best": "risk",
+   "duels": [
+    {
+     "a": "risk",
+     "answer": "tossUp",
+     "b": "value"
+    },
+    {
+     "a": "risk",
+     "answer": "tossUp",
+     "b": "finance"
+    },
+    {
+     "a": "risk",
+     "answer": "tossUp",
+     "b": "enablement"
+    },
+    {
+     "a": "value",
+     "answer": "tossUp",
+     "b": "enablement"
+    },
+    {
+     "a": "finance",
+     "answer": "tossUp",
+     "b": "enablement"
+    }
+   ],
+   "expect": {
+    "archetype": "balancer",
+    "flavour": null,
+    "maxResidual": 0.21888858333471917,
+    "needsRecheck": false,
+    "prior": {
+     "enablement": 0.11,
+     "finance": 0.225,
+     "risk": 0.44,
+     "value": 0.225
+    },
+    "residuals": [
+     0.10589594600650831,
+     0.10589594600650831,
+     0.21888858333471917,
+     0.11299263732821085,
+     0.11299263732821085
+    ],
+    "v": {
+     "enablement": -1.614109769201531,
+     "finance": -1.50111713187332,
+     "risk": -1.3952211858668118,
+     "value": -1.50111713187332
+    },
+    "weights": {
+     "enablement": 0.22301815078584072,
+     "finance": 0.24969640480752664,
+     "risk": 0.277589039599106,
+     "value": 0.24969640480752664
+    },
+    "worstIndex": 2
+   },
+   "name": "all-toss-ups",
+   "worst": "enablement"
+  },
+  {
+   "best": "risk",
+   "duels": [
+    {
+     "a": "risk",
+     "answer": "definitelyA",
+     "b": "value"
+    },
+    {
+     "a": "risk",
+     "answer": "definitelyA",
+     "b": "finance"
+    },
+    {
+     "a": "risk",
+     "answer": "definitelyA",
+     "b": "enablement"
+    },
+    {
+     "a": "value",
+     "answer": "definitelyA",
+     "b": "enablement"
+    },
+    {
+     "a": "finance",
+     "answer": "definitelyA",
+     "b": "enablement"
+    }
+   ],
+   "expect": {
+    "archetype": "firefighter",
+    "flavour": null,
+    "maxResidual": 0.5837028888925848,
+    "needsRecheck": false,
+    "prior": {
+     "enablement": 0.11,
+     "finance": 0.225,
+     "risk": 0.44,
+     "value": 0.225
+    },
+    "residuals": [
+     -0.40484408177450404,
+     -0.40484408177450404,
+     0.5837028888925848,
+     -0.3977473904528017,
+     -0.3977473904528017
+    ],
+    "v": {
+     "enablement": -2.4896641025404085,
+     "finance": -1.5011171318733196,
+     "risk": -0.5196668525279331,
+     "value": -1.5011171318733196
+    },
+    "weights": {
+     "enablement": 0.07843563281978526,
+     "finance": 0.2107821835901074,
+     "risk": 0.5,
+     "value": 0.2107821835901074
+    },
+    "worstIndex": 2
+   },
+   "name": "consistent-definite",
+   "worst": "enablement"
+  },
+  {
+   "best": "risk",
+   "duels": [
+    {
+     "a": "risk",
+     "answer": "leanA",
+     "b": "value"
+    },
+    {
+     "a": "risk",
+     "answer": "leanA",
+     "b": "finance"
+    },
+    {
+     "a": "risk",
+     "answer": "leanA",
+     "b": "enablement"
+    },
+    {
+     "a": "value",
+     "answer": "leanA",
+     "b": "enablement"
+    },
+    {
+     "a": "finance",
+     "answer": "leanA",
+     "b": "enablement"
+    }
+   ],
+   "expect": {
+    "archetype": "firefighter",
+    "flavour": null,
+    "maxResidual": 0.4012957361136521,
+    "needsRecheck": false,
+    "prior": {
+     "enablement": 0.11,
+     "finance": 0.225,
+     "risk": 0.44,
+     "value": 0.225
+    },
+    "residuals": [
+     -0.14947406788399786,
+     -0.14947406788399786,
+     0.4012957361136521,
+     -0.1423773765622952,
+     -0.1423773765622952
+    ],
+    "v": {
+     "enablement": -2.05188693587097,
+     "finance": -1.50111713187332,
+     "risk": -0.9574440191973727,
+     "value": -1.50111713187332
+    },
+    "weights": {
+     "enablement": 0.13410769770397965,
+     "finance": 0.23262157587583998,
+     "risk": 0.40064915054434047,
+     "value": 0.23262157587583998
+    },
+    "worstIndex": 2
+   },
+   "name": "consistent-lean",
+   "worst": "enablement"
+  },
+  {
+   "best": "risk",
+   "duels": [
+    {
+     "a": "risk",
+     "answer": "definitelyB",
+     "b": "value"
+    },
+    {
+     "a": "risk",
+     "answer": "definitelyB",
+     "b": "finance"
+    },
+    {
+     "a": "risk",
+     "answer": "definitelyB",
+     "b": "enablement"
+    },
+    {
+     "a": "value",
+     "answer": "definitelyB",
+     "b": "enablement"
+    },
+    {
+     "a": "finance",
+     "answer": "definitelyB",
+     "b": "enablement"
+    }
+   ],
+   "expect": {
+    "archetype": "builder",
+    "flavour": null,
+    "maxResidual": 0.6237326651092233,
+    "needsRecheck": false,
+    "prior": {
+     "enablement": 0.11,
+     "finance": 0.225,
+     "risk": 0.44,
+     "value": 0.225
+    },
+    "residuals": [
+     0.6166359737875207,
+     0.6166359737875207,
+     -0.14592572222314648,
+     0.6237326651092233,
+     0.6237326651092233
+    ],
+    "v": {
+     "enablement": -0.7385554358626528,
+     "finance": -1.50111713187332,
+     "risk": -2.27077551920569,
+     "value": -1.50111713187332
+    },
+    "weights": {
+     "enablement": 0.46533371864248757,
+     "finance": 0.2170641922621337,
+     "risk": 0.10053789683324513,
+     "value": 0.2170641922621337
+    },
+    "worstIndex": 3
+   },
+   "name": "all-reversed",
+   "worst": "enablement"
+  },
+  {
+   "best": "value",
+   "duels": [
+    {
+     "a": "value",
+     "answer": "leanA",
+     "b": "risk"
+    },
+    {
+     "a": "value",
+     "answer": "leanA",
+     "b": "enablement"
+    },
+    {
+     "a": "value",
+     "answer": "definitelyA",
+     "b": "finance"
+    },
+    {
+     "a": "risk",
+     "answer": "leanA",
+     "b": "finance"
+    },
+    {
+     "a": "enablement",
+     "answer": "leanA",
+     "b": "finance"
+    }
+   ],
+   "expect": {
+    "archetype": "enjoyer",
+    "flavour": null,
+    "maxResidual": 0.003548345660851715,
+    "needsRecheck": false,
+    "prior": {
+     "enablement": 0.225,
+     "finance": 0.11,
+     "risk": 0.225,
+     "value": 0.44
+    },
+    "residuals": [
+     -0.003548345660851382,
+     -0.003548345660851604,
+     2.220446049250313e-16,
+     0.003548345660851493,
+     0.003548345660851715
+    ],
+    "v": {
+     "enablement": -1.5011171318733207,
+     "finance": -2.1978126580941177,
+     "risk": -1.501117131873321,
+     "value": -0.8115182969742271
+    },
+    "weights": {
+     "enablement": 0.22266037550132986,
+     "finance": 0.11093584979946808,
+     "risk": 0.22266037550132983,
+     "value": 0.4437433991978724
+    },
+    "worstIndex": 4
+   },
+   "name": "symmetric-middles",
+   "worst": "finance"
+  },
+  {
+   "best": "finance",
+   "duels": [
+    {
+     "a": "finance",
+     "answer": "tossUp",
+     "b": "enablement"
+    },
+    {
+     "a": "finance",
+     "answer": "leanA",
+     "b": "value"
+    },
+    {
+     "a": "finance",
+     "answer": "definitelyA",
+     "b": "risk"
+    },
+    {
+     "a": "enablement",
+     "answer": "leanA",
+     "b": "risk"
+    },
+    {
+     "a": "value",
+     "answer": "leanA",
+     "b": "risk"
+    }
+   ],
+   "expect": {
+    "archetype": "investor",
+    "flavour": null,
+    "maxResidual": 0.34468349146256627,
+    "needsRecheck": false,
+    "prior": {
+     "enablement": 0.225,
+     "finance": 0.44,
+     "risk": 0.11,
+     "value": 0.225
+    },
+    "residuals": [
+     0.34468349146256627,
+     -0.09641016889376253,
+     -0.1459257222231467,
+     0.2025379668742323,
+     -0.049515553329384177
+    ],
+    "v": {
+     "enablement": -1.3021275106599388,
+     "finance": -0.9574440191973725,
+     "risk": -2.1978126580941164,
+     "value": -1.5541810308635553
+    },
+    "weights": {
+     "enablement": 0.2780037359336606,
+     "finance": 0.3924142506500937,
+     "risk": 0.1135166366707127,
+     "value": 0.21606537674553297
+    },
+    "worstIndex": 0
+   },
+   "name": "close-top-two",
+   "worst": "risk"
+  },
+  {
+   "best": "enablement",
+   "duels": [
+    {
+     "a": "enablement",
+     "answer": "leanB",
+     "b": "risk"
+    },
+    {
+     "a": "enablement",
+     "answer": "leanA",
+     "b": "finance"
+    },
+    {
+     "a": "enablement",
+     "answer": "definitelyA",
+     "b": "value"
+    },
+    {
+     "a": "risk",
+     "answer": "tossUp",
+     "b": "value"
+    },
+    {
+     "a": "finance",
+     "answer": "leanA",
+     "b": "value"
+    }
+   ],
+   "expect": {
+    "archetype": "builder",
+    "flavour": "firefighter",
+    "maxResidual": 0.8919049497993651,
+    "needsRecheck": false,
+    "prior": {
+     "enablement": 0.44,
+     "finance": 0.225,
+     "risk": 0.225,
+     "value": 0.11
+    },
+    "residuals": [
+     0.8919049497993651,
+     -0.242335891116909,
+     -0.437777166669439,
+     0.7497594252110318,
+     -0.19544127555253
+    ],
+    "v": {
+     "enablement": -1.1033697414205195,
+     "finance": -1.5541810308635557,
+     "risk": -1.3021275106599393,
+     "value": -2.051886935870971
+    },
+    "weights": {
+     "enablement": 0.3515958785760297,
+     "finance": 0.2240056230379826,
+     "risk": 0.28822017211970513,
+     "value": 0.13617832626628257
+    },
+    "worstIndex": 0
+   },
+   "name": "mixed",
+   "worst": "value"
+  },
+  {
+   "best": "risk",
+   "duels": [
+    {
+     "a": "risk",
+     "answer": "definitelyA",
+     "b": "value"
+    },
+    {
+     "a": "risk",
+     "answer": "definitelyA",
+     "b": "finance"
+    },
+    {
+     "a": "risk",
+     "answer": "leanB",
+     "b": "enablement"
+    },
+    {
+     "a": "value",
+     "answer": "definitelyA",
+     "b": "enablement"
+    },
+    {
+     "a": "finance",
+     "answer": "definitelyA",
+     "b": "enablement"
+    }
+   ],
+   "expect": {
+    "archetype": "firefighter",
+    "flavour": null,
+    "maxResidual": 1.7875900972335428,
+    "needsRecheck": true,
+    "prior": {
+     "enablement": 0.11,
+     "finance": 0.225,
+     "risk": 0.44,
+     "value": 0.225
+    },
+    "residuals": [
+     -0.8426212484439431,
+     -0.8426212484439431,
+     1.7875900972335428,
+     -0.8355245571222405,
+     -0.8355245571222405
+    ],
+    "v": {
+     "enablement": -2.05188693587097,
+     "finance": -1.50111713187332,
+     "risk": -0.9574440191973727,
+     "value": -1.50111713187332
+    },
+    "weights": {
+     "enablement": 0.13410769770397965,
+     "finance": 0.23262157587583998,
+     "risk": 0.40064915054434047,
+     "value": 0.23262157587583998
+    },
+    "worstIndex": 2
+   },
+   "name": "intransitive-resolvable",
+   "worst": "enablement"
+  },
+  {
+   "best": "risk",
+   "duels": [
+    {
+     "a": "risk",
+     "answer": "definitelyA",
+     "b": "value"
+    },
+    {
+     "a": "risk",
+     "answer": "definitelyA",
+     "b": "finance"
+    },
+    {
+     "a": "risk",
+     "answer": "definitelyB",
+     "b": "enablement"
+    },
+    {
+     "a": "value",
+     "answer": "definitelyA",
+     "b": "enablement"
+    },
+    {
+     "a": "finance",
+     "answer": "definitelyA",
+     "b": "enablement"
+    }
+   ],
+   "expect": {
+    "archetype": "firefighter",
+    "flavour": null,
+    "maxResidual": 2.188885833347195,
+    "needsRecheck": true,
+    "prior": {
+     "enablement": 0.11,
+     "finance": 0.225,
+     "risk": 0.44,
+     "value": 0.225
+    },
+    "residuals": [
+     -0.9885469706670895,
+     -0.9885469706670895,
+     2.188885833347195,
+     -0.981450279345387,
+     -0.981450279345387
+    ],
+    "v": {
+     "enablement": -1.9059612136478234,
+     "finance": -1.5011171318733199,
+     "risk": -1.1033697414205188,
+     "value": -1.5011171318733199
+    },
+    "weights": {
+     "enablement": 0.16052772951929944,
+     "finance": 0.2406421027818605,
+     "risk": 0.35818806491697963,
+     "value": 0.2406421027818605
+    },
+    "worstIndex": 2
+   },
+   "name": "intransitive-stuck",
+   "worst": "enablement"
+  },
+  {
+   "best": "risk",
+   "duels": [
+    {
+     "a": "risk",
+     "answer": "tossUp",
+     "b": "value",
+     "tierA": 1,
+     "tierB": 2
+    },
+    {
+     "a": "risk",
+     "answer": "tossUp",
+     "b": "finance",
+     "tierA": 1,
+     "tierB": 1
+    },
+    {
+     "a": "risk",
+     "answer": "tossUp",
+     "b": "enablement",
+     "tierA": 0,
+     "tierB": 1
+    },
+    {
+     "a": "value",
+     "answer": "tossUp",
+     "b": "enablement",
+     "tierA": 2,
+     "tierB": 2
+    },
+    {
+     "a": "finance",
+     "answer": "tossUp",
+     "b": "enablement",
+     "tierA": 1,
+     "tierB": 2
+    }
+   ],
+   "expect": {
+    "archetype": "firefighter",
+    "flavour": "investor",
+    "maxResidual": 0.1527905615708871,
+    "needsRecheck": false,
+    "prior": {
+     "enablement": 0.11,
+     "finance": 0.225,
+     "risk": 0.44,
+     "value": 0.225
+    },
+    "residuals": [
+     -0.043346269903527745,
+     0.14569387024918456,
+     0.10944429166735936,
+     0.1527905615708871,
+     -0.036249578581825204
+    ],
+    "v": {
+     "enablement": -1.9059612136478234,
+     "finance": -1.2490636116697034,
+     "risk": -1.1033697414205188,
+     "value": -1.7531706520769363
+    },
+    "weights": {
+     "enablement": 0.15809786973566173,
+     "finance": 0.3049390351717539,
+     "risk": 0.35276628030364815,
+     "value": 0.1841968147889362
+    },
+    "worstIndex": 3
+   },
+   "name": "tiered-toss-ups",
+   "worst": "enablement"
+  },
+  {
+   "best": "risk",
+   "duels": [
+    {
+     "a": "risk",
+     "answer": "leanA",
+     "b": "value",
+     "tierA": 0,
+     "tierB": 1
+    },
+    {
+     "a": "risk",
+     "answer": "leanA",
+     "b": "finance",
+     "tierA": 2,
+     "tierB": 2
+    },
+    {
+     "a": "risk",
+     "answer": "leanA",
+     "b": "enablement",
+     "tierA": 1,
+     "tierB": 2
+    },
+    {
+     "a": "value",
+     "answer": "leanA",
+     "b": "enablement",
+     "tierA": 1,
+     "tierB": 2
+    },
+    {
+     "a": "finance",
+     "answer": "leanA",
+     "b": "enablement",
+     "tierA": 0,
+     "tierB": 0
+    }
+   ],
+   "expect": {
+    "archetype": "firefighter",
+    "flavour": null,
+    "maxResidual": 0.5507698039976504,
+    "needsRecheck": false,
+    "prior": {
+     "enablement": 0.11,
+     "finance": 0.225,
+     "risk": 0.44,
+     "value": 0.225
+    },
+    "residuals": [
+     -0.5507698039976504,
+     0.14237737656229488,
+     0.2918514444462923,
+     -0.5436731126759478,
+     0.14947406788399753
+    ],
+    "v": {
+     "enablement": -2.343738380317263,
+     "finance": -1.5011171318733203,
+     "risk": -0.6655925747510801,
+     "value": -1.5011171318733203
+    },
+    "weights": {
+     "enablement": 0.09090487759471236,
+     "finance": 0.21112173433690593,
+     "risk": 0.4868516537314758,
+     "value": 0.21112173433690593
+    },
+    "worstIndex": 0
+   },
+   "name": "tiered-consistent",
+   "worst": "enablement"
+  },
+  {
+   "best": "value",
+   "duels": [
+    {
+     "a": "value",
+     "answer": "leanB",
+     "b": "risk",
+     "tierA": 2,
+     "tierB": 1
+    },
+    {
+     "a": "value",
+     "answer": "tossUp",
+     "b": "enablement",
+     "tierA": 1,
+     "tierB": 1
+    },
+    {
+     "a": "value",
+     "answer": "leanA",
+     "b": "finance",
+     "tierA": 1,
+     "tierB": 2
+    },
+    {
+     "a": "risk",
+     "answer": "leanA",
+     "b": "finance",
+     "tierA": 1,
+     "tierB": 0
+    },
+    {
+     "a": "enablement",
+     "answer": "definitelyA",
+     "b": "finance",
+     "tierA": 2,
+     "tierB": 2
+    }
+   ],
+   "expect": {
+    "archetype": "firefighter",
+    "flavour": "builder",
+    "maxResidual": 1.200338862680106,
+    "needsRecheck": false,
+    "prior": {
+     "enablement": 0.225,
+     "finance": 0.11,
+     "risk": 0.225,
+     "value": 0.44
+    },
+    "residuals": [
+     1.200338862680106,
+     -0.18595549843978465,
+     -0.5837028888925857,
+     0.9885469706670895,
+     -0.39774739045280105
+    ],
+    "v": {
+     "enablement": -1.2092656874270278,
+     "finance": -2.1978126580941173,
+     "risk": -1.2092656874270278,
+     "value": -1.3952211858668124
+    },
+    "weights": {
+     "enablement": 0.31226311529087036,
+     "finance": 0.11619841220425839,
+     "risk": 0.31226311529087036,
+     "value": 0.25927535721400086
+    },
+    "worstIndex": 0
+   },
+   "name": "tiered-against",
+   "worst": "finance"
+  },
+  {
+   "best": "risk",
+   "duels": [
+    {
+     "a": "risk",
+     "answer": "definitelyA",
+     "b": "value",
+     "tierA": 1,
+     "tierB": 2
+    },
+    {
+     "a": "risk",
+     "answer": "definitelyA",
+     "b": "finance",
+     "tierA": 0,
+     "tierB": 1
+    },
+    {
+     "a": "risk",
+     "answer": "definitelyB",
+     "b": "enablement",
+     "tierA": 1,
+     "tierB": 2
+    },
+    {
+     "a": "value",
+     "answer": "definitelyA",
+     "b": "enablement",
+     "tierA": 1,
+     "tierB": 1
+    },
+    {
+     "a": "finance",
+     "answer": "definitelyA",
+     "b": "enablement",
+     "tierA": 1,
+     "tierB": 2
+    }
+   ],
+   "expect": {
+    "archetype": "firefighter",
+    "flavour": null,
+    "maxResidual": 2.2253672639029816,
+    "needsRecheck": true,
+    "prior": {
+     "enablement": 0.11,
+     "finance": 0.225,
+     "risk": 0.44,
+     "value": 0.225
+    },
+    "residuals": [
+     -1.0449273633442142,
+     -1.2969808835478307,
+     2.2253672639029816,
+     -0.8885884561124757,
+     -1.3296821164688044
+    ],
+    "v": {
+     "enablement": -2.1978126580941164,
+     "finance": -1.448053232883085,
+     "risk": -0.66559257475108,
+     "value": -1.7001067530867016
+    },
+    "weights": {
+     "enablement": 0.10649769018564637,
+     "finance": 0.2254013794797092,
+     "risk": 0.49291827024309903,
+     "value": 0.1751826600915454
+    },
+    "worstIndex": 2
+   },
+   "name": "tiered-recheck",
+   "worst": "enablement"
+  },
+  {
+   "best": "risk",
+   "duels": [
+    {
+     "a": "risk",
+     "answer": "definitelyA",
+     "b": "value",
+     "tierA": 1,
+     "tierB": 2
+    },
+    {
+     "a": "risk",
+     "answer": "definitelyA",
+     "b": "finance",
+     "tierA": 0,
+     "tierB": 1
+    },
+    {
+     "a": "risk",
+     "answer": "leanB",
+     "b": "enablement",
+     "tierA": 1,
+     "tierB": 2
+    },
+    {
+     "a": "value",
+     "answer": "definitelyA",
+     "b": "enablement",
+     "tierA": 1,
+     "tierB": 1
+    },
+    {
+     "a": "finance",
+     "answer": "definitelyA",
+     "b": "enablement",
+     "tierA": 2,
+     "tierB": 2
+    }
+   ],
+   "expect": {
+    "archetype": "firefighter",
+    "flavour": null,
+    "maxResidual": 1.6781458055661829,
+    "needsRecheck": true,
+    "prior": {
+     "enablement": 0.11,
+     "finance": 0.225,
+     "risk": 0.44,
+     "value": 0.225
+    },
+    "residuals": [
+     -0.9520655401113027,
+     -0.952065540111303,
+     1.6781458055661829,
+     -0.8355245571222407,
+     -0.8355245571222405
+    ],
+    "v": {
+     "enablement": -2.197812658094116,
+     "finance": -1.647042854096466,
+     "risk": -0.5196668525279331,
+     "value": -1.6470428540964661
+    },
+    "weights": {
+     "enablement": 0.11187745694010319,
+     "finance": 0.19406127152994843,
+     "risk": 0.5,
+     "value": 0.1940612715299484
+    },
+    "worstIndex": 2
+   },
+   "name": "tiered-recheck-resolvable",
+   "worst": "enablement"
+  }
+ ],
+ "note": "Generated by tools/oracle/quiz_golden.py. Do not edit by hand.",
+ "rechecks": [
+  {
+   "best": "risk",
+   "duels": [
+    {
+     "a": "risk",
+     "answer": "definitelyA",
+     "b": "value"
+    },
+    {
+     "a": "risk",
+     "answer": "definitelyA",
+     "b": "finance"
+    },
+    {
+     "a": "risk",
+     "answer": "leanB",
+     "b": "enablement"
+    },
+    {
+     "a": "value",
+     "answer": "definitelyA",
+     "b": "enablement"
+    },
+    {
+     "a": "finance",
+     "answer": "definitelyA",
+     "b": "enablement"
+    }
+   ],
+   "expect": {
+    "archetype": "firefighter",
+    "flavour": "enjoyer",
+    "lessSure": false,
+    "weights": {
+     "enablement": 0.18446434309203863,
+     "finance": 0.24552476646407795,
+     "risk": 0.32448612397980525,
+     "value": 0.24552476646407806
+    }
+   },
+   "name": "intransitive-resolvable",
+   "recheck": {
+    "a": "risk",
+    "answer": "leanB",
+    "b": "enablement"
+   },
+   "worst": "enablement"
+  },
+  {
+   "best": "risk",
+   "duels": [
+    {
+     "a": "risk",
+     "answer": "definitelyA",
+     "b": "value"
+    },
+    {
+     "a": "risk",
+     "answer": "definitelyA",
+     "b": "finance"
+    },
+    {
+     "a": "risk",
+     "answer": "definitelyB",
+     "b": "enablement"
+    },
+    {
+     "a": "value",
+     "answer": "definitelyA",
+     "b": "enablement"
+    },
+    {
+     "a": "finance",
+     "answer": "definitelyA",
+     "b": "enablement"
+    }
+   ],
+   "expect": {
+    "archetype": "balancer",
+    "flavour": null,
+    "lessSure": true,
+    "weights": {
+     "enablement": 0.2307163266562906,
+     "finance": 0.25007318919740856,
+     "risk": 0.26913729494889227,
+     "value": 0.25007318919740856
+    }
+   },
+   "name": "intransitive-stuck",
+   "recheck": {
+    "a": "risk",
+    "answer": "definitelyB",
+    "b": "enablement"
+   },
+   "worst": "enablement"
+  },
+  {
+   "best": "risk",
+   "duels": [
+    {
+     "a": "risk",
+     "answer": "definitelyA",
+     "b": "value",
+     "tierA": 1,
+     "tierB": 2
+    },
+    {
+     "a": "risk",
+     "answer": "definitelyA",
+     "b": "finance",
+     "tierA": 0,
+     "tierB": 1
+    },
+    {
+     "a": "risk",
+     "answer": "definitelyB",
+     "b": "enablement",
+     "tierA": 1,
+     "tierB": 2
+    },
+    {
+     "a": "value",
+     "answer": "definitelyA",
+     "b": "enablement",
+     "tierA": 1,
+     "tierB": 1
+    },
+    {
+     "a": "finance",
+     "answer": "definitelyA",
+     "b": "enablement",
+     "tierA": 1,
+     "tierB": 2
+    }
+   ],
+   "expect": {
+    "archetype": "firefighter",
+    "flavour": null,
+    "lessSure": true,
+    "weights": {
+     "enablement": 0.16396757391639405,
+     "finance": 0.2495711573594546,
+     "risk": 0.392493781349964,
+     "value": 0.19396748737418748
+    }
+   },
+   "name": "tiered-recheck",
+   "recheck": {
+    "a": "risk",
+    "answer": "definitelyB",
+    "b": "enablement",
+    "tierA": 1,
+    "tierB": 2
+   },
+   "worst": "enablement"
+  },
+  {
+   "best": "risk",
+   "duels": [
+    {
+     "a": "risk",
+     "answer": "definitelyA",
+     "b": "value",
+     "tierA": 1,
+     "tierB": 2
+    },
+    {
+     "a": "risk",
+     "answer": "definitelyA",
+     "b": "finance",
+     "tierA": 0,
+     "tierB": 1
+    },
+    {
+     "a": "risk",
+     "answer": "leanB",
+     "b": "enablement",
+     "tierA": 1,
+     "tierB": 2
+    },
+    {
+     "a": "value",
+     "answer": "definitelyA",
+     "b": "enablement",
+     "tierA": 1,
+     "tierB": 1
+    },
+    {
+     "a": "finance",
+     "answer": "definitelyA",
+     "b": "enablement",
+     "tierA": 2,
+     "tierB": 2
+    }
+   ],
+   "expect": {
+    "archetype": "firefighter",
+    "flavour": null,
+    "lessSure": false,
+    "weights": {
+     "enablement": 0.12505823025754004,
+     "finance": 0.18747088487122998,
+     "risk": 0.5,
+     "value": 0.18747088487123004
+    }
+   },
+   "name": "tiered-recheck-resolvable",
+   "recheck": {
+    "a": "risk",
+    "answer": "tossUp",
+    "b": "enablement",
+    "tierA": 1,
+    "tierB": 2
+   },
+   "worst": "enablement"
+  }
+ ],
+ "skipped": {
+  "expect": {
+   "archetype": "balancer",
+   "flavour": null
+  }
+ }
+}
