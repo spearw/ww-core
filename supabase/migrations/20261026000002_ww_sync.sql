@@ -52,13 +52,15 @@ begin
 
   execute format('alter table %s add column if not exists list_id uuid', v_rel);
   execute format('alter table %s alter column list_id set not null', v_rel);
-  select exists (
-    select 1 from pg_constraint k
-      join pg_attribute a on a.attrelid = k.conrelid and a.attnum = any (k.conkey)
-      where k.conrelid = p_table and k.contype = 'f' and k.confrelid = 'public.ww_list'::regclass
-        and a.attname = 'list_id' and array_length(k.conkey, 1) = 1
-  ) into v_has_fk;
-  if not v_has_fk then
+  -- An existing list_id FK to ww_list must cascade (R13: the last member going takes the rows).
+  select bool_or(k.confdeltype = 'c') from pg_constraint k
+    join pg_attribute a on a.attrelid = k.conrelid and a.attnum = any (k.conkey)
+    where k.conrelid = p_table and k.contype = 'f' and k.confrelid = 'public.ww_list'::regclass
+      and a.attname = 'list_id' and array_length(k.conkey, 1) = 1
+    into v_has_fk;
+  if v_has_fk is false then
+    raise exception 'ww_make_synced: list_id must reference ww_list on delete cascade';
+  elsif v_has_fk is null then
     execute format(
       'alter table %s add constraint %I foreign key (list_id) references public.ww_list (id) on delete cascade',
       v_rel, v_name || '_ww_list_fk');
@@ -67,6 +69,9 @@ begin
   execute format('alter table %s add column if not exists updated_by uuid', v_rel);
   execute format('alter table %s add column if not exists deleted_at timestamptz', v_rel);
   execute format('alter table %s add column if not exists ww_seq bigint not null default 0', v_rel);
+  -- Rows that existed before this call (default 0) would never be pulled; stamp them, as the
+  -- migration's role, so they reach every member's next pull.
+  execute format('update %s set ww_seq = nextval(''public.ww_seq'') where ww_seq = 0', v_rel);
   execute format('create index if not exists %I on %s (list_id, ww_seq)', v_name || '_ww_seq_idx', v_rel);
 
   execute format('drop trigger if exists ww_sync_stamp on %s', v_rel);
@@ -88,7 +93,22 @@ begin
   execute format(
     'create policy ww_sync_update on %s for update to authenticated using (public.ww_is_member(list_id)) with check (public.ww_is_member(list_id))',
     v_rel);
+  -- The same membership checks again as restrictive policies, which are AND-ed with every
+  -- permissive one: a permissive policy the app adds later can never reach past membership.
+  execute format('drop policy if exists ww_sync_member_select on %s', v_rel);
+  execute format('drop policy if exists ww_sync_member_insert on %s', v_rel);
+  execute format('drop policy if exists ww_sync_member_update on %s', v_rel);
+  execute format(
+    'create policy ww_sync_member_select on %s as restrictive for select to authenticated using (public.ww_is_member(list_id))',
+    v_rel);
+  execute format(
+    'create policy ww_sync_member_insert on %s as restrictive for insert to authenticated with check (public.ww_is_member(list_id))',
+    v_rel);
+  execute format(
+    'create policy ww_sync_member_update on %s as restrictive for update to authenticated using (public.ww_is_member(list_id)) with check (public.ww_is_member(list_id))',
+    v_rel);
   -- No delete policy: rows are tombstoned (deleted_at), never deleted by a member.
+  -- `revoke all` also takes TRUNCATE (which ignores RLS), REFERENCES and TRIGGER from both roles.
   execute format('revoke all on table %s from anon, authenticated', v_rel);
   execute format('grant select, insert, update on table %s to authenticated', v_rel);
 
@@ -213,6 +233,11 @@ begin
       end if;
     exception when others then
       get stacked diagnostics v_state = returned_sqlstate;
+      -- Transient: a deadlock, a serialization failure or a lock timeout fails the whole push
+      -- (nothing commits; the phone's outbox is untouched and the next sync retries it).
+      if v_state in ('40P01', '40001', '55P03') then
+        raise;
+      end if;
       v_reason := case v_state
         when '42501' then 'not_allowed'
         when 'WW001' then 'list_moved'
@@ -233,7 +258,7 @@ end $$;
 create function public.ww_pull(p_cursors jsonb, p_limit int default 500) returns jsonb
 language plpgsql stable security invoker set search_path = public as $$
 declare
-  v_limit int := greatest(coalesce(p_limit, 500), 0);
+  v_limit int := least(greatest(coalesce(p_limit, 500), 1), 500);
   v_sql text;
   v_lists jsonb;
   v_changes jsonb := '[]'::jsonb;

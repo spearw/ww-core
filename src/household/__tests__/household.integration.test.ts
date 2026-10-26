@@ -1,3 +1,5 @@
+import { randomUUID } from 'node:crypto';
+
 import { listsOnPhone } from '../../sync';
 import {
   adminClient,
@@ -96,5 +98,25 @@ describe('household on local Supabase', () => {
     const members = await membersOf(listId);
     expect(members).toHaveLength(2);
     expect(members).toContain(will.userId);
+  });
+
+  it('the last two members leaving at once take the list and its rows with them', async () => {
+    const { users } = await makeUsers(['will', 'katie']);
+    const will = users['will']!;
+    const katie = users['katie']!;
+    const listId = await will.household.create('Home', 'Will');
+    const { token } = await will.household.invite(listId);
+    expect(await katie.household.accept(token, 'Katie')).toEqual({ ok: true, listId });
+    const { error } = await adminClient()
+      .from('ww_test_item')
+      .insert({ id: randomUUID(), list_id: listId, title: 'left behind?' });
+    expect(error).toBeNull();
+    await Promise.all([will.household.leave(listId), katie.household.leave(listId)]);
+    const lists = await adminClient().from('ww_list').select('id').eq('id', listId);
+    expect(lists.error).toBeNull();
+    expect(lists.data).toEqual([]);
+    const items = await adminClient().from('ww_test_item').select('id').eq('list_id', listId);
+    expect(items.error).toBeNull();
+    expect(items.data).toEqual([]);
   });
 });

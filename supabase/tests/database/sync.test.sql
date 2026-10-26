@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(71);
+select plan(83);
 
 -- Will (a1) and Katie (a2) share 'h'; Will also has 'w2', Katie 'k2'; the outsider (a3) has 'o1'.
 insert into auth.users (id, email) values
@@ -227,6 +227,25 @@ select ok((select bool_and(m ? 'userId' and m ? 'joinedAt') from jsonb_array_ele
   'R11: members carry userId and joinedAt');
 select is(jsonb_array_length(pg_temp.v('pw')::jsonb->'lists'), 2, 'R11: Will''s pull lists his two lists');
 
+-- R10: p_limit is clamped to 1..500
+set local request.jwt.claims = '{"sub": "00000000-0000-0000-0000-0000000000a2"}';
+insert into t select 'pbig', c::text from jsonb_array_elements(ww_pull('{}'::jsonb, 5000)->'changes') c where c->>'listId' = pg_temp.v('k2');
+select is(jsonb_array_length(pg_temp.v('pbig')::jsonb->'rows'), 3, 'R10: p_limit 5000 over 3 rows behaves as 500: all 3 rows');
+select is((pg_temp.v('pbig')::jsonb->>'more')::boolean, false, 'R10: p_limit 5000: more is false');
+insert into t select 'pzero', c::text from jsonb_array_elements(ww_pull('{}'::jsonb, 0)->'changes') c where c->>'listId' = pg_temp.v('k2');
+select is(jsonb_array_length(pg_temp.v('pzero')::jsonb->'rows'), 1, 'R10: p_limit 0 answers 1 row');
+select is((pg_temp.v('pzero')::jsonb->>'more')::boolean, true, 'R10: p_limit 0: more is true');
+
+-- R2: an app-added permissive policy cannot widen membership (restrictive policies AND in)
+reset role;
+create policy open on public.ww_test_item for select using (true);
+set local role authenticated;
+set local request.jwt.claims = '{"sub": "00000000-0000-0000-0000-0000000000a3"}';
+select is((select count(*)::int from ww_test_item), 0, 'R2: with an open select policy added, the outsider still selects 0 rows');
+reset role;
+drop policy open on public.ww_test_item;
+set local role authenticated;
+
 -- R13: the last member going takes the rows
 set local request.jwt.claims = '{"sub": "00000000-0000-0000-0000-0000000000a2"}';
 select lives_ok(format($$ select ww_leave_list(%L) $$, pg_temp.v('k2')), 'R13: Katie leaves her own list');
@@ -238,6 +257,24 @@ set local role authenticated;
 select throws_ok($$ select ww_push((select jsonb_agg(jsonb_build_object('table', 'ww_test_item', 'row', '{}'::jsonb)) from generate_series(1, 501))) $$,
   '54000', null, 'R12: 501 changes is an error (54000)');
 
+-- ww_make_synced: a list_id FK without on delete cascade is refused
+reset role;
+create table public.ww_t_noaction (id uuid primary key, list_id uuid not null references public.ww_list);
+select throws_ok($$ select public.ww_make_synced('public.ww_t_noaction') $$, 'P0001',
+  'ww_make_synced: list_id must reference ww_list on delete cascade', 'R1: a list_id FK without cascade is refused');
+
+-- ww_make_synced: rows that existed before it get a seq and are pulled
+create table public.ww_t_pre (id uuid primary key, title text);
+alter table public.ww_t_pre add column list_id uuid;
+insert into public.ww_t_pre (id, title, list_id) values ('00000000-0000-0000-0000-0000000000f1', 'before', pg_temp.v('h')::uuid);
+select public.ww_make_synced('public.ww_t_pre');
+select ok((select ww_seq > 0 from public.ww_t_pre where id = '00000000-0000-0000-0000-0000000000f1'), 'R10: a row made before ww_make_synced gets ww_seq > 0');
+set local role authenticated;
+set local request.jwt.claims = '{"sub": "00000000-0000-0000-0000-0000000000a1"}';
+select is((select r->'row'->>'title' from jsonb_array_elements(ww_pull('{}'::jsonb)->'changes') c,
+    jsonb_array_elements(c->'rows') r where r->>'table' = 'ww_t_pre'), 'before', 'R10: and a member''s pull returns it');
+reset role;
+
 -- privileges and function properties
 select is(has_sequence_privilege('anon', 'public.ww_seq', 'UPDATE'), false, 'R8: anon cannot setval ww_seq');
 select is(has_sequence_privilege('authenticated', 'public.ww_seq', 'UPDATE'), false, 'R8: authenticated cannot setval ww_seq');
@@ -246,6 +283,11 @@ select volatility_is('public', 'ww_pull', ARRAY['jsonb', 'integer'], 'stable', '
 select isnt_definer('public', 'ww_push', ARRAY['jsonb'], 'R2: ww_push is security invoker');
 select isnt_definer('public', 'ww_pull', ARRAY['jsonb', 'integer'], 'R2: ww_pull is security invoker');
 select isnt_definer('public', 'ww_make_synced', ARRAY['regclass'], 'R1: ww_make_synced runs as the migration''s role');
+
+select table_privs_are('public', 'ww_test_item', 'authenticated', ARRAY['SELECT', 'INSERT', 'UPDATE'], 'a synced table: authenticated has select, insert, update only');
+select table_privs_are('public', 'ww_test_item', 'anon', ARRAY[]::text[], 'a synced table: anon has nothing');
+select table_privs_are('public', 'ww_member_profile', 'authenticated', ARRAY['SELECT', 'INSERT', 'UPDATE'], 'ww_member_profile: authenticated has select, insert, update only');
+select table_privs_are('public', 'ww_member_profile', 'anon', ARRAY[]::text[], 'ww_member_profile: anon has nothing');
 
 select * from finish();
 rollback;

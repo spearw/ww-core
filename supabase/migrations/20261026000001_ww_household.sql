@@ -32,6 +32,10 @@ alter table public.ww_list enable row level security;
 alter table public.ww_list_member enable row level security;
 alter table public.ww_list_invite enable row level security; -- no policies: RPC only
 revoke all on table public.ww_list, public.ww_list_member, public.ww_list_invite from anon;
+-- Supabase's default privileges grant every table privilege to the API roles; TRUNCATE ignores
+-- RLS, so it (and REFERENCES, TRIGGER) is taken back.
+revoke truncate, references, trigger on table public.ww_list, public.ww_list_member,
+  public.ww_list_invite from anon, authenticated;
 
 create function public.ww_is_member(p_list uuid) returns boolean
 language sql stable security definer set search_path = public as $$
@@ -126,6 +130,15 @@ begin
     return v_list;
   end if;
 
+  -- The same user's second accept racing the first: once the first commits, this one's claim
+  -- matches nothing, but the caller is a member now; that is a success, not WW011.
+  select i.list_id into v_list from ww_list_invite i
+    where i.token_hash = v_hash
+      and exists (select 1 from ww_list_member m where m.list_id = i.list_id and m.user_id = v_user);
+  if found then
+    return v_list;
+  end if;
+
   select * into v_inv from ww_list_invite where token_hash = v_hash;
   if not found then
     raise exception 'unknown invite' using errcode = 'WW012';
@@ -176,6 +189,10 @@ create function public.ww_after_member_delete() returns trigger
 language plpgsql security definer set search_path = public as $$
 declare v_next uuid;
 begin
+  -- Serialise every member delete of one list on its row: without the lock, the last two members
+  -- leaving at once each still see the other (neither delete is committed) and the list, with
+  -- all its rows, outlives them both. A waiter re-reads the members after the first commits.
+  perform 1 from ww_list where id = old.list_id for update;
   delete from ww_list_invite where list_id = old.list_id and used_at is null;
   select m.user_id into v_next from ww_list_member m
     where m.list_id = old.list_id order by m.joined_at, m.user_id limit 1;
@@ -190,13 +207,17 @@ end $$;
 create trigger ww_after_member_delete after delete on public.ww_list_member
   for each row execute function public.ww_after_member_delete();
 
--- Callable functions: authenticated only. Helpers stay internal.
+-- Callable functions: authenticated only. ww_is_member is executable too, because the RLS
+-- policies call it as the invoking role. ww_clean_name and ww_require_user are internal: only
+-- the security-definer functions above (running as their owner) call them.
 revoke all on function public.ww_is_member(uuid), public.ww_clean_name(text, int),
   public.ww_require_user(), public.ww_create_household(text, text), public.ww_create_invite(uuid),
   public.ww_accept_invite(text, text), public.ww_leave_list(uuid), public.ww_remove_member(uuid, uuid),
   public.ww_rename_list(uuid, text), public.ww_set_display_name(uuid, text),
   public.ww_after_member_delete() from public, anon;
-grant execute on function public.ww_is_member(uuid), public.ww_clean_name(text, int),
-  public.ww_require_user(), public.ww_create_household(text, text), public.ww_create_invite(uuid),
+revoke all on function public.ww_clean_name(text, int), public.ww_require_user()
+  from public, anon, authenticated;
+grant execute on function public.ww_is_member(uuid), public.ww_create_household(text, text),
+  public.ww_create_invite(uuid),
   public.ww_accept_invite(text, text), public.ww_leave_list(uuid), public.ww_remove_member(uuid, uuid),
   public.ww_rename_list(uuid, text), public.ww_set_display_name(uuid, text) to authenticated;

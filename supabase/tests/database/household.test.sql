@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(38);
+select plan(54);
 
 insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-0000000000a1', 'will@example.test'),
@@ -61,6 +61,17 @@ select throws_ok(format($$ select ww_accept_invite(%L, 'Third') $$, (select v fr
 select throws_ok($$ select ww_accept_invite('nonsense', 'Third') $$, 'WW012', null, 'an unknown token is WW012');
 select throws_ok(format($$ select ww_accept_invite(%L, '') $$, (select v from t where k = 'tok')), 'WW014', null, 'a bad name is WW014');
 
+-- the same user accepting twice in a row gets the list id both times
+set local request.jwt.claims = '{"sub": "00000000-0000-0000-0000-0000000000a1"}';
+insert into t select 'twice', token from ww_create_invite((select v::uuid from t where k = 'list'));
+set local request.jwt.claims = '{"sub": "00000000-0000-0000-0000-0000000000a3"}';
+select is(ww_accept_invite((select v from t where k = 'twice'), 'Third'), (select v::uuid from t where k = 'list'), 'a first accept returns the list id');
+select is(ww_accept_invite((select v from t where k = 'twice'), 'Third'), (select v::uuid from t where k = 'list'), 'a second accept by the same user returns it again');
+reset role;
+select is((select count(*)::int from public.ww_list_member where user_id = '00000000-0000-0000-0000-0000000000a3'), 1, 'and the user is a member once');
+delete from public.ww_list_member where user_id = '00000000-0000-0000-0000-0000000000a3';
+set local role authenticated;
+
 -- expiry
 set local request.jwt.claims = '{"sub": "00000000-0000-0000-0000-0000000000a1"}';
 insert into t select 'old', token from ww_create_invite((select v::uuid from t where k = 'list'));
@@ -119,6 +130,21 @@ delete from auth.users where id = '00000000-0000-0000-0000-0000000000a0';
 select is((select owner_id from public.ww_list), '00000000-0000-0000-0000-0000000000a2'::uuid, 'and then Katie holds the list');
 delete from auth.users where id = '00000000-0000-0000-0000-0000000000a2';
 select is((select count(*)::int from public.ww_list), 0, 'deleting the last member deletes the list');
+
+-- privileges: no truncate, references or trigger for the API roles; helpers stay internal
+select table_privs_are('public', 'ww_list', 'authenticated', ARRAY['SELECT', 'INSERT', 'UPDATE', 'DELETE'], 'ww_list: no truncate, references or trigger for authenticated');
+select table_privs_are('public', 'ww_list_member', 'authenticated', ARRAY['SELECT', 'INSERT', 'UPDATE', 'DELETE'], 'ww_list_member: no truncate, references or trigger for authenticated');
+select table_privs_are('public', 'ww_list_invite', 'authenticated', ARRAY['SELECT', 'INSERT', 'UPDATE', 'DELETE'], 'ww_list_invite: no truncate, references or trigger for authenticated');
+select table_privs_are('public', 'ww_list', 'anon', ARRAY[]::text[], 'ww_list: nothing for anon');
+select table_privs_are('public', 'ww_list_member', 'anon', ARRAY[]::text[], 'ww_list_member: nothing for anon');
+select table_privs_are('public', 'ww_list_invite', 'anon', ARRAY[]::text[], 'ww_list_invite: nothing for anon');
+select function_privs_are('public', 'ww_clean_name', ARRAY['text', 'integer'], 'authenticated', ARRAY[]::text[], 'ww_clean_name is internal (authenticated)');
+select function_privs_are('public', 'ww_clean_name', ARRAY['text', 'integer'], 'anon', ARRAY[]::text[], 'ww_clean_name is internal (anon)');
+select function_privs_are('public', 'ww_clean_name', ARRAY['text', 'integer'], 'public', ARRAY[]::text[], 'ww_clean_name is internal (public)');
+select function_privs_are('public', 'ww_require_user', ARRAY[]::text[], 'authenticated', ARRAY[]::text[], 'ww_require_user is internal (authenticated)');
+select function_privs_are('public', 'ww_require_user', ARRAY[]::text[], 'anon', ARRAY[]::text[], 'ww_require_user is internal (anon)');
+select function_privs_are('public', 'ww_require_user', ARRAY[]::text[], 'public', ARRAY[]::text[], 'ww_require_user is internal (public)');
+select function_privs_are('public', 'ww_is_member', ARRAY['uuid'], 'authenticated', ARRAY['EXECUTE'], 'ww_is_member stays executable: policies call it as the caller');
 
 select * from finish();
 rollback;
