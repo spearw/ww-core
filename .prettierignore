@@ -1,0 +1,5 @@
+reference/
+tools/
+src/engine/__fixtures__/
+src/quiz/__fixtures__/
+supabase/
