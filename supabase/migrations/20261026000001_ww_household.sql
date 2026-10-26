@@ -94,6 +94,9 @@ begin
   return next;
 end $$;
 
+-- An invite only works while its creator is still a member: one whose creator has left reads as
+-- WW012 (unknown) afterwards, and ww_after_member_delete also deletes every unused invite of the
+-- list whenever anyone leaves, so a removed member cannot rejoin with an invite minted earlier.
 create function public.ww_accept_invite(p_token text, p_display_name text) returns uuid
 language plpgsql volatile security definer set search_path = public as $$
 declare
@@ -115,6 +118,8 @@ begin
   -- lock, re-checks used_at after the first commits, matches nothing and falls through to WW011.
   update ww_list_invite set used_by = v_user, used_at = now()
     where token_hash = v_hash and used_at is null and expires_at > now()
+      and exists (select 1 from ww_list_member m
+        where m.list_id = ww_list_invite.list_id and m.user_id = ww_list_invite.created_by)
     returning list_id into v_list;
   if found then
     insert into ww_list_member (list_id, user_id, display_name) values (v_list, v_user, v_display);
@@ -126,6 +131,8 @@ begin
     raise exception 'unknown invite' using errcode = 'WW012';
   elsif v_inv.used_at is not null then
     raise exception 'invite already used' using errcode = 'WW011';
+  elsif v_inv.expires_at > now() then
+    raise exception 'unknown invite' using errcode = 'WW012'; -- its creator has left
   end if;
   raise exception 'invite expired' using errcode = 'WW010';
 end $$;
@@ -169,6 +176,7 @@ create function public.ww_after_member_delete() returns trigger
 language plpgsql security definer set search_path = public as $$
 declare v_next uuid;
 begin
+  delete from ww_list_invite where list_id = old.list_id and used_at is null;
   select m.user_id into v_next from ww_list_member m
     where m.list_id = old.list_id order by m.joined_at, m.user_id limit 1;
   if v_next is null then

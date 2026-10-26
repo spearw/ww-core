@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(28);
+select plan(38);
 
 insert into auth.users (id, email) values
   ('00000000-0000-0000-0000-0000000000a1', 'will@example.test'),
@@ -37,12 +37,6 @@ select isnt((select token_hash from public.ww_list_invite), (select v from t whe
 set local role authenticated;
 set local request.jwt.claims = '{"sub": "00000000-0000-0000-0000-0000000000a1"}';
 
--- the owner using their own household's invite: list id back, invite unused, still one member
-select is(ww_accept_invite((select v from t where k = 'tok'), 'Will'), (select v::uuid from t where k = 'list'), 'a member accepting gets the list id');
-reset role;
-select is((select used_at from public.ww_list_invite), null, 'and the invite stays unused');
-set local role authenticated;
-
 set local request.jwt.claims = '{"sub": "00000000-0000-0000-0000-0000000000a2"}';
 select is(ww_accept_invite((select v from t where k = 'tok'), 'Katie'), (select v::uuid from t where k = 'list'), 'Katie accepts');
 select is((select count(*)::int from ww_list_member), 2, 'two members');
@@ -54,6 +48,14 @@ reset role;
 select is((select count(*)::int from public.ww_list_invite where used_by is null), 0, 'a direct update changes 0 rows');
 set local role authenticated;
 
+set local request.jwt.claims = '{"sub": "00000000-0000-0000-0000-0000000000a1"}';
+insert into t select 'own', token from ww_create_invite((select v::uuid from t where k = 'list'));
+select is(ww_accept_invite((select v from t where k = 'own'), 'Will'), (select v::uuid from t where k = 'list'), 'the owner accepting their own invite gets the list id');
+reset role;
+select is((select count(*)::int from public.ww_list_member), 2, 'still two members');
+select is((select used_at from public.ww_list_invite where token_hash = encode(sha256(convert_to((select v from t where k = 'own'), 'utf8')), 'hex')), null, 'and that invite stays unused');
+delete from public.ww_list_invite where used_at is null;
+set local role authenticated;
 set local request.jwt.claims = '{"sub": "00000000-0000-0000-0000-0000000000a3"}';
 select throws_ok(format($$ select ww_accept_invite(%L, 'Third') $$, (select v from t where k = 'tok')), 'WW011', null, 'a used token is WW011');
 select throws_ok($$ select ww_accept_invite('nonsense', 'Third') $$, 'WW012', null, 'an unknown token is WW012');
@@ -73,19 +75,48 @@ select throws_ok(format($$ select ww_remove_member(%L, '00000000-0000-0000-0000-
 set local request.jwt.claims = '{"sub": "00000000-0000-0000-0000-0000000000a2"}';
 select throws_ok(format($$ select ww_remove_member(%L, '00000000-0000-0000-0000-0000000000a1') $$, (select v from t where k = 'list')), 'WW013', null, 'a member who is not the owner removing is WW013');
 select lives_ok(format($$ select ww_set_display_name(%L, 'Kate') $$, (select v from t where k = 'list')), 'a member renames themselves');
+select throws_ok(format($$ select ww_rename_list(%L, %L) $$, (select v from t where k = 'list'), repeat('x', 61)), 'WW014', null, 'a 61-character list name is WW014');
+select lives_ok(format($$ select ww_rename_list(%L, 'Our place') $$, (select v from t where k = 'list')), 'a non-owner member renames the list');
+select is((select name from ww_list), 'Our place', 'and the name changed');
+insert into t select 'kt', token from ww_create_invite((select v::uuid from t where k = 'list'));
 set local request.jwt.claims = '{"sub": "00000000-0000-0000-0000-0000000000a1"}';
 select ww_remove_member((select v::uuid from t where k = 'list'), '00000000-0000-0000-0000-0000000000a2');
 set local request.jwt.claims = '{"sub": "00000000-0000-0000-0000-0000000000a2"}';
 select is((select count(*)::int from ww_list), 0, 'a removed member no longer selects the list');
+select throws_ok(format($$ select ww_accept_invite(%L, 'Katie') $$, (select v from t where k = 'kt')), 'WW012', null, 'an invite minted before removal is unknown afterwards');
+select is((select count(*)::int from ww_list), 0, 'so the removed member still selects 0 lists');
+
+-- leaving
+set local request.jwt.claims = '{"sub": "00000000-0000-0000-0000-0000000000a1"}';
+insert into t select 'tok1', token from ww_create_invite((select v::uuid from t where k = 'list'));
+set local request.jwt.claims = '{"sub": "00000000-0000-0000-0000-0000000000a4"}';
+select ww_accept_invite((select v from t where k = 'tok1'), 'Fourth');
+select is((select count(*)::int from ww_list), 1, 'the fourth user joined');
+select ww_leave_list((select v::uuid from t where k = 'list'));
+select is((select count(*)::int from ww_list), 0, 'a leaver selects 0 lists afterwards');
 
 -- owner leaves: earliest-joined member takes over (R13)
 set local request.jwt.claims = '{"sub": "00000000-0000-0000-0000-0000000000a1"}';
 insert into t select 'tok2', token from ww_create_invite((select v::uuid from t where k = 'list'));
+insert into t select 'tok3', token from ww_create_invite((select v::uuid from t where k = 'list'));
 set local request.jwt.claims = '{"sub": "00000000-0000-0000-0000-0000000000a2"}';
 select ww_accept_invite((select v from t where k = 'tok2'), 'Katie');
+set local request.jwt.claims = '{"sub": "00000000-0000-0000-0000-0000000000a3"}';
+select ww_accept_invite((select v from t where k = 'tok3'), 'Third');
 reset role;
+update public.ww_list_member set joined_at = '2026-01-01' where user_id = '00000000-0000-0000-0000-0000000000a1';
+update public.ww_list_member set joined_at = '2026-02-01' where user_id = '00000000-0000-0000-0000-0000000000a3';
+update public.ww_list_member set joined_at = '2026-03-01' where user_id = '00000000-0000-0000-0000-0000000000a2';
 delete from auth.users where id = '00000000-0000-0000-0000-0000000000a1';
-select is((select owner_id from public.ww_list), '00000000-0000-0000-0000-0000000000a2'::uuid, 'deleting the owner hands the list to Katie');
+select is((select owner_id from public.ww_list), '00000000-0000-0000-0000-0000000000a3'::uuid, 'the earliest-joined member (not the lowest id) becomes owner');
+update public.ww_list_member set joined_at = '2026-03-01';
+insert into auth.users (id, email) values ('00000000-0000-0000-0000-0000000000a0', 'zero@example.test');
+insert into public.ww_list_member (list_id, user_id, display_name, joined_at)
+  select id, '00000000-0000-0000-0000-0000000000a0', 'Zero', '2026-03-01' from public.ww_list;
+delete from auth.users where id = '00000000-0000-0000-0000-0000000000a3';
+select is((select owner_id from public.ww_list), '00000000-0000-0000-0000-0000000000a0'::uuid, 'a joined_at tie goes to the lower user id');
+delete from auth.users where id = '00000000-0000-0000-0000-0000000000a0';
+select is((select owner_id from public.ww_list), '00000000-0000-0000-0000-0000000000a2'::uuid, 'and then Katie holds the list');
 delete from auth.users where id = '00000000-0000-0000-0000-0000000000a2';
 select is((select count(*)::int from public.ww_list), 0, 'deleting the last member deletes the list');
 
