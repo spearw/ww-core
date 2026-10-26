@@ -42,6 +42,14 @@ describe('wire codec', () => {
     expect(toWire(testItemWithColour, { ...raw, colour: 'red' })).toHaveProperty('colour', 'red');
   });
 
+  it('toWire sends only the keys a partial row carries', () => {
+    expect(toWire(testItem, { id: 'i1', list_id: 'L', title: 'A' })).toEqual({
+      id: 'i1',
+      list_id: 'L',
+      title: 'A',
+    });
+  });
+
   it('round-trips a null json column', () => {
     expect(
       fromWire(testItem, {

@@ -5,7 +5,12 @@ import type { WireRow } from './types';
 
 const SERVER_SET = new Set(['updated_at', 'updated_by']);
 
-/** Local SQLite row (SQL column names) → JSON wire row. Every column of the table is sent. */
+/**
+ * Local SQLite row (SQL column names) → JSON wire row. Every column PRESENT in the row is sent
+ * (a full row read from SQLite sends every column the phone's schema has, which is how schema
+ * drift reaches the server); the server-set `updated_at`/`updated_by` are always omitted; a
+ * partial row sends only its own keys (rule R7).
+ */
 export function toWire(table: SQLiteTable, raw: Record<string, unknown>): WireRow {
   const out: WireRow = {};
   for (const col of getTableConfig(table).columns) {
