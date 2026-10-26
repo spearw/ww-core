@@ -22,3 +22,19 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run check
+  oracle:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.13'
+      - run: python -m unittest discover -s tools/oracle -p 'test_*.py' -v
+      - name: Fixture is up to date with the oracle
+        run: |
+          python tools/oracle/generate.py
+          git diff --exit-code -- src/engine/__fixtures__/conformance-app.json
+      - name: Quiz golden file is up to date with the oracle
+        run: |
+          python tools/oracle/quiz_golden.py
+          git diff --exit-code -- src/quiz/__fixtures__/weights-golden.json
