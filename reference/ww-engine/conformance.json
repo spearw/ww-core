@@ -1,0 +1,2435 @@
+{
+ "as_of": "2026-09-11",
+ "note": "Expected values produced by engine/score.py at as_of. A port must inject this clock to reproduce the urgency column.",
+ "weights": {
+  "risk": 0.4,
+  "value": 0.3,
+  "finance": 0.2,
+  "enablement": 0.1
+ },
+ "horizon_years": 10,
+ "cases": [
+  {
+   "id": "floor-trivial",
+   "what": "Floor case: a $2 ten-minute task must not dominate the list",
+   "input": {
+    "id": "floor-trivial",
+    "cost": 2,
+    "cost_confidence": "quoted",
+    "effort": 1,
+    "risk": {
+     "probability": 3,
+     "consequence": 2
+    },
+    "value": {
+     "reach": 3,
+     "impact": {
+      "william": 1,
+      "partner": 1
+     }
+    },
+    "finance": {
+     "recoup_pct": 0,
+     "annual_savings": 0,
+     "annual_carrying_cost": 0
+    },
+    "urgency": "standard",
+    "identified": "2026-09-11",
+    "status": "open"
+   },
+   "expect": {
+    "R": 2.4,
+    "V": 1.0,
+    "split": 0.0,
+    "fpr": 0.0,
+    "F": 0.0,
+    "E": 0.0,
+    "U": 1.0,
+    "C": 1.0,
+    "cod": 1.26,
+    "cod_adj": 1.26,
+    "size": 1.241,
+    "priority": 101.5,
+    "track": "quick",
+    "band": "NOW",
+    "blocked": false,
+    "blocks": []
+   }
+  },
+  {
+   "id": "log-cost-100x",
+   "what": "Same value at 100x the cost: priority should roughly halve, not vanish",
+   "input": {
+    "id": "log-cost-100x",
+    "cost": 100000,
+    "cost_confidence": "quoted",
+    "effort": 3,
+    "risk": {
+     "probability": 3,
+     "consequence": 2
+    },
+    "value": {
+     "reach": 3,
+     "impact": {
+      "william": 1,
+      "partner": 1
+     }
+    },
+    "finance": {
+     "recoup_pct": 0,
+     "annual_savings": 0,
+     "annual_carrying_cost": 0
+    },
+    "urgency": "standard",
+    "identified": "2026-09-11",
+    "status": "open"
+   },
+   "expect": {
+    "R": 2.4,
+    "V": 1.0,
+    "split": 0.0,
+    "fpr": 0.0,
+    "F": 0.0,
+    "E": 0.0,
+    "U": 1.0,
+    "C": 1.0,
+    "cod": 1.26,
+    "cod_adj": 1.26,
+    "size": 7.25,
+    "priority": 17.4,
+    "track": "capital",
+    "band": "SOMEDAY",
+    "blocked": false,
+    "blocks": []
+   }
+  },
+  {
+   "id": "log-cost-1x",
+   "what": "Control for log-cost-100x",
+   "input": {
+    "id": "log-cost-1x",
+    "cost": 1000,
+    "cost_confidence": "quoted",
+    "effort": 3,
+    "risk": {
+     "probability": 3,
+     "consequence": 2
+    },
+    "value": {
+     "reach": 3,
+     "impact": {
+      "william": 1,
+      "partner": 1
+     }
+    },
+    "finance": {
+     "recoup_pct": 0,
+     "annual_savings": 0,
+     "annual_carrying_cost": 0
+    },
+    "urgency": "standard",
+    "identified": "2026-09-11",
+    "status": "open"
+   },
+   "expect": {
+    "R": 2.4,
+    "V": 1.0,
+    "split": 0.0,
+    "fpr": 0.0,
+    "F": 0.0,
+    "E": 0.0,
+    "U": 1.0,
+    "C": 1.0,
+    "cod": 1.26,
+    "cod_adj": 1.26,
+    "size": 4.356,
+    "priority": 28.9,
+    "track": "projects",
+    "band": "SOMEDAY",
+    "blocked": false,
+    "blocks": []
+   }
+  },
+  {
+   "id": "effort-friction",
+   "what": "Effort is separate from cost: same dollars, 8 points of effort",
+   "input": {
+    "id": "effort-friction",
+    "cost": 1000,
+    "cost_confidence": "quoted",
+    "effort": 8,
+    "risk": {
+     "probability": 3,
+     "consequence": 2
+    },
+    "value": {
+     "reach": 3,
+     "impact": {
+      "william": 1,
+      "partner": 1
+     }
+    },
+    "finance": {
+     "recoup_pct": 0,
+     "annual_savings": 0,
+     "annual_carrying_cost": 0
+    },
+    "urgency": "standard",
+    "identified": "2026-09-11",
+    "status": "open"
+   },
+   "expect": {
+    "R": 2.4,
+    "V": 1.0,
+    "split": 0.0,
+    "fpr": 0.0,
+    "F": 0.0,
+    "E": 0.0,
+    "U": 1.0,
+    "C": 1.0,
+    "cod": 1.26,
+    "cod_adj": 1.26,
+    "size": 6.61,
+    "priority": 19.1,
+    "track": "projects",
+    "band": "SOMEDAY",
+    "blocked": false,
+    "blocks": []
+   }
+  },
+  {
+   "id": "risk-max",
+   "what": "P5 x C5 -> R = 10.0",
+   "input": {
+    "id": "risk-max",
+    "cost": 1000,
+    "cost_confidence": "quoted",
+    "effort": 3,
+    "risk": {
+     "probability": 5,
+     "consequence": 5
+    },
+    "value": {
+     "reach": 1,
+     "impact": {
+      "william": 1,
+      "partner": 1
+     }
+    },
+    "finance": {
+     "recoup_pct": 0,
+     "annual_savings": 0,
+     "annual_carrying_cost": 0
+    },
+    "urgency": "standard",
+    "identified": "2026-09-11",
+    "status": "open"
+   },
+   "expect": {
+    "R": 10.0,
+    "V": 0.33,
+    "split": 0.0,
+    "fpr": 0.0,
+    "F": 0.0,
+    "E": 0.0,
+    "U": 1.0,
+    "C": 1.0,
+    "cod": 4.1,
+    "cod_adj": 4.1,
+    "size": 4.356,
+    "priority": 94.1,
+    "track": "projects",
+    "band": "NOW",
+    "blocked": false,
+    "blocks": []
+   }
+  },
+  {
+   "id": "risk-min",
+   "what": "P1 x C1 -> R = 0.4 (not zero)",
+   "input": {
+    "id": "risk-min",
+    "cost": 1000,
+    "cost_confidence": "quoted",
+    "effort": 3,
+    "risk": {
+     "probability": 1,
+     "consequence": 1
+    },
+    "value": {
+     "reach": 1,
+     "impact": {
+      "william": 1,
+      "partner": 1
+     }
+    },
+    "finance": {
+     "recoup_pct": 0,
+     "annual_savings": 0,
+     "annual_carrying_cost": 0
+    },
+    "urgency": "standard",
+    "identified": "2026-09-11",
+    "status": "open"
+   },
+   "expect": {
+    "R": 0.4,
+    "V": 0.33,
+    "split": 0.0,
+    "fpr": 0.0,
+    "F": 0.0,
+    "E": 0.0,
+    "U": 1.0,
+    "C": 1.0,
+    "cod": 0.26,
+    "cod_adj": 0.26,
+    "size": 4.356,
+    "priority": 6.0,
+    "track": "projects",
+    "band": "SOMEDAY",
+    "blocked": false,
+    "blocks": []
+   }
+  },
+  {
+   "id": "risk-cascade",
+   "what": "Cheap upstream water control: high C, moderate P",
+   "input": {
+    "id": "risk-cascade",
+    "cost": 1800,
+    "cost_confidence": "quoted",
+    "effort": 5,
+    "risk": {
+     "probability": 3,
+     "consequence": 5
+    },
+    "value": {
+     "reach": 1,
+     "impact": {
+      "william": 1,
+      "partner": 1
+     }
+    },
+    "finance": {
+     "recoup_pct": 0,
+     "annual_savings": 0,
+     "annual_carrying_cost": 0
+    },
+    "urgency": "standard",
+    "identified": "2026-09-11",
+    "status": "open"
+   },
+   "expect": {
+    "R": 6.0,
+    "V": 0.33,
+    "split": 0.0,
+    "fpr": 0.0,
+    "F": 0.0,
+    "E": 0.0,
+    "U": 1.0,
+    "C": 1.0,
+    "cod": 2.5,
+    "cod_adj": 2.5,
+    "size": 5.701,
+    "priority": 43.9,
+    "track": "projects",
+    "band": "SOON",
+    "blocked": false,
+    "blocks": []
+   }
+  },
+  {
+   "id": "value-max",
+   "what": "Reach 10 x impact 3 clamps V at 10",
+   "input": {
+    "id": "value-max",
+    "cost": 1000,
+    "cost_confidence": "quoted",
+    "effort": 3,
+    "risk": {
+     "probability": 1,
+     "consequence": 1
+    },
+    "value": {
+     "reach": 10,
+     "impact": {
+      "william": 3,
+      "partner": 3
+     }
+    },
+    "finance": {
+     "recoup_pct": 0,
+     "annual_savings": 0,
+     "annual_carrying_cost": 0
+    },
+    "urgency": "standard",
+    "identified": "2026-09-11",
+    "status": "open"
+   },
+   "expect": {
+    "R": 0.4,
+    "V": 10.0,
+    "split": 0.0,
+    "fpr": 0.0,
+    "F": 0.0,
+    "E": 0.0,
+    "U": 1.0,
+    "C": 1.0,
+    "cod": 3.16,
+    "cod_adj": 3.16,
+    "size": 4.356,
+    "priority": 72.5,
+    "track": "projects",
+    "band": "NEXT",
+    "blocked": false,
+    "blocks": []
+   }
+  },
+  {
+   "id": "value-clamp",
+   "what": "Reach 10 x impact 3 = 30/3 = 10, must clamp not overflow",
+   "input": {
+    "id": "value-clamp",
+    "cost": 1000,
+    "cost_confidence": "quoted",
+    "effort": 3,
+    "risk": {
+     "probability": 1,
+     "consequence": 1
+    },
+    "value": {
+     "reach": 10,
+     "impact": {
+      "william": 3,
+      "partner": 2
+     }
+    },
+    "finance": {
+     "recoup_pct": 0,
+     "annual_savings": 0,
+     "annual_carrying_cost": 0
+    },
+    "urgency": "standard",
+    "identified": "2026-09-11",
+    "status": "open"
+   },
+   "expect": {
+    "R": 0.4,
+    "V": 8.33,
+    "split": 3.33,
+    "fpr": 0.0,
+    "F": 0.0,
+    "E": 0.0,
+    "U": 1.0,
+    "C": 1.0,
+    "cod": 2.66,
+    "cod_adj": 2.66,
+    "size": 4.356,
+    "priority": 61.1,
+    "track": "projects",
+    "band": "NEXT",
+    "blocked": false,
+    "blocks": []
+   }
+  },
+  {
+   "id": "value-split",
+   "what": "Disagreement: 3 vs 0.25 impact must surface a spread, not average away",
+   "input": {
+    "id": "value-split",
+    "cost": 1000,
+    "cost_confidence": "quoted",
+    "effort": 3,
+    "risk": {
+     "probability": 1,
+     "consequence": 1
+    },
+    "value": {
+     "reach": 8,
+     "impact": {
+      "william": 3,
+      "partner": 0.25
+     }
+    },
+    "finance": {
+     "recoup_pct": 0,
+     "annual_savings": 0,
+     "annual_carrying_cost": 0
+    },
+    "urgency": "standard",
+    "identified": "2026-09-11",
+    "status": "open"
+   },
+   "expect": {
+    "R": 0.4,
+    "V": 4.33,
+    "split": 7.33,
+    "fpr": 0.0,
+    "F": 0.0,
+    "E": 0.0,
+    "U": 1.0,
+    "C": 1.0,
+    "cod": 1.46,
+    "cod_adj": 1.46,
+    "size": 4.356,
+    "priority": 33.5,
+    "track": "projects",
+    "band": "SOMEDAY",
+    "blocked": false,
+    "blocks": []
+   }
+  },
+  {
+   "id": "fin-zero",
+   "what": "No recoup, no savings -> FPR 0 -> F 0",
+   "input": {
+    "id": "fin-zero",
+    "cost": 1000,
+    "cost_confidence": "quoted",
+    "effort": 3,
+    "risk": {
+     "probability": 1,
+     "consequence": 1
+    },
+    "value": {
+     "reach": 1,
+     "impact": {
+      "william": 1,
+      "partner": 1
+     }
+    },
+    "finance": {
+     "recoup_pct": 0,
+     "annual_savings": 0,
+     "annual_carrying_cost": 0
+    },
+    "urgency": "standard",
+    "identified": "2026-09-11",
+    "status": "open"
+   },
+   "expect": {
+    "R": 0.4,
+    "V": 0.33,
+    "split": 0.0,
+    "fpr": 0.0,
+    "F": 0.0,
+    "E": 0.0,
+    "U": 1.0,
+    "C": 1.0,
+    "cod": 0.26,
+    "cod_adj": 0.26,
+    "size": 4.356,
+    "priority": 6.0,
+    "track": "projects",
+    "band": "SOMEDAY",
+    "blocked": false,
+    "blocks": []
+   }
+  },
+  {
+   "id": "fin-breakeven",
+   "what": "FPR exactly 1.0 -> F 6.0 (anchor point)",
+   "input": {
+    "id": "fin-breakeven",
+    "cost": 1000,
+    "cost_confidence": "quoted",
+    "effort": 3,
+    "risk": {
+     "probability": 1,
+     "consequence": 1
+    },
+    "value": {
+     "reach": 1,
+     "impact": {
+      "william": 1,
+      "partner": 1
+     }
+    },
+    "finance": {
+     "recoup_pct": 1.0,
+     "annual_savings": 0,
+     "annual_carrying_cost": 0
+    },
+    "urgency": "standard",
+    "identified": "2026-09-11",
+    "status": "open"
+   },
+   "expect": {
+    "R": 0.4,
+    "V": 0.33,
+    "split": 0.0,
+    "fpr": 1.0,
+    "F": 6.0,
+    "E": 0.0,
+    "U": 1.0,
+    "C": 1.0,
+    "cod": 1.46,
+    "cod_adj": 1.46,
+    "size": 4.356,
+    "priority": 33.5,
+    "track": "projects",
+    "band": "SOMEDAY",
+    "blocked": false,
+    "blocks": []
+   }
+  },
+  {
+   "id": "fin-anchor-075",
+   "what": "FPR 0.75 -> F 4.5 (anchor point)",
+   "input": {
+    "id": "fin-anchor-075",
+    "cost": 1000,
+    "cost_confidence": "quoted",
+    "effort": 3,
+    "risk": {
+     "probability": 1,
+     "consequence": 1
+    },
+    "value": {
+     "reach": 1,
+     "impact": {
+      "william": 1,
+      "partner": 1
+     }
+    },
+    "finance": {
+     "recoup_pct": 0.75,
+     "annual_savings": 0,
+     "annual_carrying_cost": 0
+    },
+    "urgency": "standard",
+    "identified": "2026-09-11",
+    "status": "open"
+   },
+   "expect": {
+    "R": 0.4,
+    "V": 0.33,
+    "split": 0.0,
+    "fpr": 0.75,
+    "F": 4.5,
+    "E": 0.0,
+    "U": 1.0,
+    "C": 1.0,
+    "cod": 1.16,
+    "cod_adj": 1.16,
+    "size": 4.356,
+    "priority": 26.6,
+    "track": "projects",
+    "band": "SOMEDAY",
+    "blocked": false,
+    "blocks": []
+   }
+  },
+  {
+   "id": "fin-saturate",
+   "what": "FPR >= 3 saturates at F 10",
+   "input": {
+    "id": "fin-saturate",
+    "cost": 1000,
+    "cost_confidence": "quoted",
+    "effort": 3,
+    "risk": {
+     "probability": 1,
+     "consequence": 1
+    },
+    "value": {
+     "reach": 1,
+     "impact": {
+      "william": 1,
+      "partner": 1
+     }
+    },
+    "finance": {
+     "recoup_pct": 4.0,
+     "annual_savings": 0,
+     "annual_carrying_cost": 0
+    },
+    "urgency": "standard",
+    "identified": "2026-09-11",
+    "status": "open"
+   },
+   "expect": {
+    "R": 0.4,
+    "V": 0.33,
+    "split": 0.0,
+    "fpr": 4.0,
+    "F": 10.0,
+    "E": 0.0,
+    "U": 1.0,
+    "C": 1.0,
+    "cod": 2.26,
+    "cod_adj": 2.26,
+    "size": 4.356,
+    "priority": 51.9,
+    "track": "projects",
+    "band": "SOON",
+    "blocked": false,
+    "blocks": []
+   }
+  },
+  {
+   "id": "fin-carrying-cost",
+   "what": "Carrying cost can drive FPR near zero \u2014 the pool case",
+   "input": {
+    "id": "fin-carrying-cost",
+    "cost": 100000,
+    "cost_confidence": "guess",
+    "effort": 8,
+    "risk": {
+     "probability": 1,
+     "consequence": 1
+    },
+    "value": {
+     "reach": 8,
+     "impact": {
+      "william": 3,
+      "partner": 2
+     }
+    },
+    "finance": {
+     "recoup_pct": 0.56,
+     "annual_savings": 0,
+     "annual_carrying_cost": 4500
+    },
+    "urgency": "standard",
+    "identified": "2026-09-11",
+    "status": "open"
+   },
+   "expect": {
+    "R": 0.4,
+    "V": 6.67,
+    "split": 2.67,
+    "fpr": 0.11,
+    "F": 0.66,
+    "E": 0.0,
+    "U": 1.0,
+    "C": 0.7,
+    "cod": 2.292,
+    "cod_adj": 1.604,
+    "size": 11.0,
+    "priority": 14.6,
+    "track": "capital",
+    "band": "SOMEDAY",
+    "blocked": false,
+    "blocks": []
+   }
+  },
+  {
+   "id": "fin-negative",
+   "what": "Negative FPR must clamp to F 0, never go below",
+   "input": {
+    "id": "fin-negative",
+    "cost": 10000,
+    "cost_confidence": "quoted",
+    "effort": 3,
+    "risk": {
+     "probability": 1,
+     "consequence": 1
+    },
+    "value": {
+     "reach": 1,
+     "impact": {
+      "william": 1,
+      "partner": 1
+     }
+    },
+    "finance": {
+     "recoup_pct": 0.1,
+     "annual_savings": 0,
+     "annual_carrying_cost": 5000
+    },
+    "urgency": "standard",
+    "identified": "2026-09-11",
+    "status": "open"
+   },
+   "expect": {
+    "R": 0.4,
+    "V": 0.33,
+    "split": 0.0,
+    "fpr": -4.9,
+    "F": 0.0,
+    "E": 0.0,
+    "U": 1.0,
+    "C": 1.0,
+    "cod": 0.26,
+    "cod_adj": 0.26,
+    "size": 5.801,
+    "priority": 4.5,
+    "track": "projects",
+    "band": "SOMEDAY",
+    "blocked": false,
+    "blocks": []
+   }
+  },
+  {
+   "id": "fin-savings-only",
+   "what": "Recurring savings with no resale value",
+   "input": {
+    "id": "fin-savings-only",
+    "cost": 2500,
+    "cost_confidence": "quoted",
+    "effort": 3,
+    "risk": {
+     "probability": 1,
+     "consequence": 1
+    },
+    "value": {
+     "reach": 1,
+     "impact": {
+      "william": 1,
+      "partner": 1
+     }
+    },
+    "finance": {
+     "recoup_pct": 0,
+     "annual_savings": 400,
+     "annual_carrying_cost": 0
+    },
+    "urgency": "standard",
+    "identified": "2026-09-11",
+    "status": "open"
+   },
+   "expect": {
+    "R": 0.4,
+    "V": 0.33,
+    "split": 0.0,
+    "fpr": 1.6,
+    "F": 7.7,
+    "E": 0.0,
+    "U": 1.0,
+    "C": 1.0,
+    "cod": 1.8,
+    "cod_adj": 1.8,
+    "size": 4.93,
+    "priority": 36.5,
+    "track": "projects",
+    "band": "SOON",
+    "blocked": false,
+    "blocks": []
+   }
+  },
+  {
+   "id": "urg-standard",
+   "what": "standard -> U 1.0 regardless of age",
+   "input": {
+    "id": "urg-standard",
+    "cost": 1000,
+    "cost_confidence": "quoted",
+    "effort": 3,
+    "risk": {
+     "probability": 1,
+     "consequence": 1
+    },
+    "value": {
+     "reach": 1,
+     "impact": {
+      "william": 1,
+      "partner": 1
+     }
+    },
+    "finance": {
+     "recoup_pct": 0,
+     "annual_savings": 0,
+     "annual_carrying_cost": 0
+    },
+    "urgency": "standard",
+    "identified": "2017-09-11",
+    "status": "open"
+   },
+   "expect": {
+    "R": 0.4,
+    "V": 0.33,
+    "split": 0.0,
+    "fpr": 0.0,
+    "F": 0.0,
+    "E": 0.0,
+    "U": 1.0,
+    "C": 1.0,
+    "cod": 0.26,
+    "cod_adj": 0.26,
+    "size": 4.356,
+    "priority": 6.0,
+    "track": "projects",
+    "band": "SOMEDAY",
+    "blocked": false,
+    "blocks": []
+   }
+  },
+  {
+   "id": "urg-expedite",
+   "what": "expedite -> U 2.0 flat",
+   "input": {
+    "id": "urg-expedite",
+    "cost": 1000,
+    "cost_confidence": "quoted",
+    "effort": 3,
+    "risk": {
+     "probability": 1,
+     "consequence": 1
+    },
+    "value": {
+     "reach": 1,
+     "impact": {
+      "william": 1,
+      "partner": 1
+     }
+    },
+    "finance": {
+     "recoup_pct": 0,
+     "annual_savings": 0,
+     "annual_carrying_cost": 0
+    },
+    "urgency": "expedite",
+    "identified": "2026-09-11",
+    "status": "open"
+   },
+   "expect": {
+    "R": 0.4,
+    "V": 0.33,
+    "split": 0.0,
+    "fpr": 0.0,
+    "F": 0.0,
+    "E": 0.0,
+    "U": 2.0,
+    "C": 1.0,
+    "cod": 0.26,
+    "cod_adj": 0.52,
+    "size": 4.356,
+    "priority": 11.9,
+    "track": "projects",
+    "band": "SOMEDAY",
+    "blocked": false,
+    "blocks": []
+   }
+  },
+  {
+   "id": "urg-intangible-0y",
+   "what": "intangible at 0 years -> U 1.0",
+   "input": {
+    "id": "urg-intangible-0y",
+    "cost": 1000,
+    "cost_confidence": "quoted",
+    "effort": 3,
+    "risk": {
+     "probability": 1,
+     "consequence": 1
+    },
+    "value": {
+     "reach": 1,
+     "impact": {
+      "william": 1,
+      "partner": 1
+     }
+    },
+    "finance": {
+     "recoup_pct": 0,
+     "annual_savings": 0,
+     "annual_carrying_cost": 0
+    },
+    "urgency": "intangible",
+    "identified": "2026-09-11",
+    "status": "open"
+   },
+   "expect": {
+    "R": 0.4,
+    "V": 0.33,
+    "split": 0.0,
+    "fpr": 0.0,
+    "F": 0.0,
+    "E": 0.0,
+    "U": 1.0,
+    "C": 1.0,
+    "cod": 0.26,
+    "cod_adj": 0.26,
+    "size": 4.356,
+    "priority": 6.0,
+    "track": "projects",
+    "band": "SOMEDAY",
+    "blocked": false,
+    "blocks": []
+   }
+  },
+  {
+   "id": "urg-intangible-3y",
+   "what": "intangible at 3 years -> U 1.24",
+   "input": {
+    "id": "urg-intangible-3y",
+    "cost": 1000,
+    "cost_confidence": "quoted",
+    "effort": 3,
+    "risk": {
+     "probability": 1,
+     "consequence": 1
+    },
+    "value": {
+     "reach": 1,
+     "impact": {
+      "william": 1,
+      "partner": 1
+     }
+    },
+    "finance": {
+     "recoup_pct": 0,
+     "annual_savings": 0,
+     "annual_carrying_cost": 0
+    },
+    "urgency": "intangible",
+    "identified": "2023-09-11",
+    "status": "open"
+   },
+   "expect": {
+    "R": 0.4,
+    "V": 0.33,
+    "split": 0.0,
+    "fpr": 0.0,
+    "F": 0.0,
+    "E": 0.0,
+    "U": 1.24,
+    "C": 1.0,
+    "cod": 0.26,
+    "cod_adj": 0.322,
+    "size": 4.356,
+    "priority": 7.4,
+    "track": "projects",
+    "band": "SOMEDAY",
+    "blocked": false,
+    "blocks": []
+   }
+  },
+  {
+   "id": "urg-intangible-cap",
+   "what": "intangible caps at U 2.5 (reached at 18.75 years)",
+   "input": {
+    "id": "urg-intangible-cap",
+    "cost": 1000,
+    "cost_confidence": "quoted",
+    "effort": 3,
+    "risk": {
+     "probability": 1,
+     "consequence": 1
+    },
+    "value": {
+     "reach": 1,
+     "impact": {
+      "william": 1,
+      "partner": 1
+     }
+    },
+    "finance": {
+     "recoup_pct": 0,
+     "annual_savings": 0,
+     "annual_carrying_cost": 0
+    },
+    "urgency": "intangible",
+    "identified": "1996-09-10",
+    "status": "open"
+   },
+   "expect": {
+    "R": 0.4,
+    "V": 0.33,
+    "split": 0.0,
+    "fpr": 0.0,
+    "F": 0.0,
+    "E": 0.0,
+    "U": 2.5,
+    "C": 1.0,
+    "cod": 0.26,
+    "cod_adj": 0.65,
+    "size": 4.356,
+    "priority": 14.9,
+    "track": "projects",
+    "band": "SOMEDAY",
+    "blocked": false,
+    "blocks": []
+   }
+  },
+  {
+   "id": "urg-constant-4y",
+   "what": "constant_benefit at 4 years -> U 1.20",
+   "input": {
+    "id": "urg-constant-4y",
+    "cost": 1000,
+    "cost_confidence": "quoted",
+    "effort": 3,
+    "risk": {
+     "probability": 1,
+     "consequence": 1
+    },
+    "value": {
+     "reach": 1,
+     "impact": {
+      "william": 1,
+      "partner": 1
+     }
+    },
+    "finance": {
+     "recoup_pct": 0,
+     "annual_savings": 0,
+     "annual_carrying_cost": 0
+    },
+    "urgency": "constant_benefit",
+    "identified": "2022-09-11",
+    "status": "open"
+   },
+   "expect": {
+    "R": 0.4,
+    "V": 0.33,
+    "split": 0.0,
+    "fpr": 0.0,
+    "F": 0.0,
+    "E": 0.0,
+    "U": 1.2,
+    "C": 1.0,
+    "cod": 0.26,
+    "cod_adj": 0.312,
+    "size": 4.356,
+    "priority": 7.2,
+    "track": "projects",
+    "band": "SOMEDAY",
+    "blocked": false,
+    "blocks": []
+   }
+  },
+  {
+   "id": "urg-constant-cap",
+   "what": "constant_benefit caps at U 1.5",
+   "input": {
+    "id": "urg-constant-cap",
+    "cost": 1000,
+    "cost_confidence": "quoted",
+    "effort": 3,
+    "risk": {
+     "probability": 1,
+     "consequence": 1
+    },
+    "value": {
+     "reach": 1,
+     "impact": {
+      "william": 1,
+      "partner": 1
+     }
+    },
+    "finance": {
+     "recoup_pct": 0,
+     "annual_savings": 0,
+     "annual_carrying_cost": 0
+    },
+    "urgency": "constant_benefit",
+    "identified": "1996-09-10",
+    "status": "open"
+   },
+   "expect": {
+    "R": 0.4,
+    "V": 0.33,
+    "split": 0.0,
+    "fpr": 0.0,
+    "F": 0.0,
+    "E": 0.0,
+    "U": 1.5,
+    "C": 1.0,
+    "cod": 0.26,
+    "cod_adj": 0.39,
+    "size": 4.356,
+    "priority": 9.0,
+    "track": "projects",
+    "band": "SOMEDAY",
+    "blocked": false,
+    "blocks": []
+   }
+  },
+  {
+   "id": "urg-fixed-far",
+   "what": "fixed_date more than 6 months out -> U 1.0",
+   "input": {
+    "id": "urg-fixed-far",
+    "cost": 1000,
+    "cost_confidence": "quoted",
+    "effort": 3,
+    "risk": {
+     "probability": 1,
+     "consequence": 1
+    },
+    "value": {
+     "reach": 1,
+     "impact": {
+      "william": 1,
+      "partner": 1
+     }
+    },
+    "finance": {
+     "recoup_pct": 0,
+     "annual_savings": 0,
+     "annual_carrying_cost": 0
+    },
+    "urgency": "fixed_date",
+    "identified": "2026-09-11",
+    "status": "open",
+    "deadline": "2027-07-08"
+   },
+   "expect": {
+    "R": 0.4,
+    "V": 0.33,
+    "split": 0.0,
+    "fpr": 0.0,
+    "F": 0.0,
+    "E": 0.0,
+    "U": 1.0,
+    "C": 1.0,
+    "cod": 0.26,
+    "cod_adj": 0.26,
+    "size": 4.356,
+    "priority": 6.0,
+    "track": "projects",
+    "band": "SOMEDAY",
+    "blocked": false,
+    "blocks": []
+   }
+  },
+  {
+   "id": "urg-fixed-near",
+   "what": "fixed_date 3 months out -> U ramps to ~1.75",
+   "input": {
+    "id": "urg-fixed-near",
+    "cost": 1000,
+    "cost_confidence": "quoted",
+    "effort": 3,
+    "risk": {
+     "probability": 1,
+     "consequence": 1
+    },
+    "value": {
+     "reach": 1,
+     "impact": {
+      "william": 1,
+      "partner": 1
+     }
+    },
+    "finance": {
+     "recoup_pct": 0,
+     "annual_savings": 0,
+     "annual_carrying_cost": 0
+    },
+    "urgency": "fixed_date",
+    "identified": "2026-09-11",
+    "status": "open",
+    "deadline": "2026-12-11"
+   },
+   "expect": {
+    "R": 0.4,
+    "V": 0.33,
+    "split": 0.0,
+    "fpr": 0.0,
+    "F": 0.0,
+    "E": 0.0,
+    "U": 1.753,
+    "C": 1.0,
+    "cod": 0.26,
+    "cod_adj": 0.456,
+    "size": 4.356,
+    "priority": 10.5,
+    "track": "projects",
+    "band": "SOMEDAY",
+    "blocked": false,
+    "blocks": []
+   }
+  },
+  {
+   "id": "urg-fixed-passed",
+   "what": "fixed_date in the past -> U 1.0 (value has already cliffed)",
+   "input": {
+    "id": "urg-fixed-passed",
+    "cost": 1000,
+    "cost_confidence": "quoted",
+    "effort": 3,
+    "risk": {
+     "probability": 1,
+     "consequence": 1
+    },
+    "value": {
+     "reach": 1,
+     "impact": {
+      "william": 1,
+      "partner": 1
+     }
+    },
+    "finance": {
+     "recoup_pct": 0,
+     "annual_savings": 0,
+     "annual_carrying_cost": 0
+    },
+    "urgency": "fixed_date",
+    "identified": "2026-09-11",
+    "status": "open",
+    "deadline": "2026-09-01"
+   },
+   "expect": {
+    "R": 0.4,
+    "V": 0.33,
+    "split": 0.0,
+    "fpr": 0.0,
+    "F": 0.0,
+    "E": 0.0,
+    "U": 1.0,
+    "C": 1.0,
+    "cod": 0.26,
+    "cod_adj": 0.26,
+    "size": 4.356,
+    "priority": 6.0,
+    "track": "projects",
+    "band": "SOMEDAY",
+    "blocked": false,
+    "blocks": []
+   }
+  },
+  {
+   "id": "urg-fixed-nodate",
+   "what": "fixed_date with no deadline set -> U 1.0, must not crash",
+   "input": {
+    "id": "urg-fixed-nodate",
+    "cost": 1000,
+    "cost_confidence": "quoted",
+    "effort": 3,
+    "risk": {
+     "probability": 1,
+     "consequence": 1
+    },
+    "value": {
+     "reach": 1,
+     "impact": {
+      "william": 1,
+      "partner": 1
+     }
+    },
+    "finance": {
+     "recoup_pct": 0,
+     "annual_savings": 0,
+     "annual_carrying_cost": 0
+    },
+    "urgency": "fixed_date",
+    "identified": "2026-09-11",
+    "status": "open"
+   },
+   "expect": {
+    "R": 0.4,
+    "V": 0.33,
+    "split": 0.0,
+    "fpr": 0.0,
+    "F": 0.0,
+    "E": 0.0,
+    "U": 1.0,
+    "C": 1.0,
+    "cod": 0.26,
+    "cod_adj": 0.26,
+    "size": 4.356,
+    "priority": 6.0,
+    "track": "projects",
+    "band": "SOMEDAY",
+    "blocked": false,
+    "blocks": []
+   }
+  },
+  {
+   "id": "conf-quoted",
+   "what": "quoted -> C 1.00",
+   "input": {
+    "id": "conf-quoted",
+    "cost": 1000,
+    "cost_confidence": "quoted",
+    "effort": 3,
+    "risk": {
+     "probability": 1,
+     "consequence": 1
+    },
+    "value": {
+     "reach": 1,
+     "impact": {
+      "william": 1,
+      "partner": 1
+     }
+    },
+    "finance": {
+     "recoup_pct": 0,
+     "annual_savings": 0,
+     "annual_carrying_cost": 0
+    },
+    "urgency": "standard",
+    "identified": "2026-09-11",
+    "status": "open"
+   },
+   "expect": {
+    "R": 0.4,
+    "V": 0.33,
+    "split": 0.0,
+    "fpr": 0.0,
+    "F": 0.0,
+    "E": 0.0,
+    "U": 1.0,
+    "C": 1.0,
+    "cod": 0.26,
+    "cod_adj": 0.26,
+    "size": 4.356,
+    "priority": 6.0,
+    "track": "projects",
+    "band": "SOMEDAY",
+    "blocked": false,
+    "blocks": []
+   }
+  },
+  {
+   "id": "conf-estimate",
+   "what": "estimate -> C 0.85",
+   "input": {
+    "id": "conf-estimate",
+    "cost": 1000,
+    "cost_confidence": "estimate",
+    "effort": 3,
+    "risk": {
+     "probability": 1,
+     "consequence": 1
+    },
+    "value": {
+     "reach": 1,
+     "impact": {
+      "william": 1,
+      "partner": 1
+     }
+    },
+    "finance": {
+     "recoup_pct": 0,
+     "annual_savings": 0,
+     "annual_carrying_cost": 0
+    },
+    "urgency": "standard",
+    "identified": "2026-09-11",
+    "status": "open"
+   },
+   "expect": {
+    "R": 0.4,
+    "V": 0.33,
+    "split": 0.0,
+    "fpr": 0.0,
+    "F": 0.0,
+    "E": 0.0,
+    "U": 1.0,
+    "C": 0.85,
+    "cod": 0.26,
+    "cod_adj": 0.221,
+    "size": 4.356,
+    "priority": 5.1,
+    "track": "projects",
+    "band": "SOMEDAY",
+    "blocked": false,
+    "blocks": []
+   }
+  },
+  {
+   "id": "conf-guess",
+   "what": "guess -> C 0.70",
+   "input": {
+    "id": "conf-guess",
+    "cost": 1000,
+    "cost_confidence": "guess",
+    "effort": 3,
+    "risk": {
+     "probability": 1,
+     "consequence": 1
+    },
+    "value": {
+     "reach": 1,
+     "impact": {
+      "william": 1,
+      "partner": 1
+     }
+    },
+    "finance": {
+     "recoup_pct": 0,
+     "annual_savings": 0,
+     "annual_carrying_cost": 0
+    },
+    "urgency": "standard",
+    "identified": "2026-09-11",
+    "status": "open"
+   },
+   "expect": {
+    "R": 0.4,
+    "V": 0.33,
+    "split": 0.0,
+    "fpr": 0.0,
+    "F": 0.0,
+    "E": 0.0,
+    "U": 1.0,
+    "C": 0.7,
+    "cod": 0.26,
+    "cod_adj": 0.182,
+    "size": 4.356,
+    "priority": 4.2,
+    "track": "projects",
+    "band": "SOMEDAY",
+    "blocked": false,
+    "blocks": []
+   }
+  },
+  {
+   "id": "conf-unknown",
+   "what": "unrecognised confidence falls back to 0.85, must not crash",
+   "input": {
+    "id": "conf-unknown",
+    "cost": 1000,
+    "cost_confidence": "nonsense",
+    "effort": 3,
+    "risk": {
+     "probability": 1,
+     "consequence": 1
+    },
+    "value": {
+     "reach": 1,
+     "impact": {
+      "william": 1,
+      "partner": 1
+     }
+    },
+    "finance": {
+     "recoup_pct": 0,
+     "annual_savings": 0,
+     "annual_carrying_cost": 0
+    },
+    "urgency": "standard",
+    "identified": "2026-09-11",
+    "status": "open"
+   },
+   "expect": {
+    "R": 0.4,
+    "V": 0.33,
+    "split": 0.0,
+    "fpr": 0.0,
+    "F": 0.0,
+    "E": 0.0,
+    "U": 1.0,
+    "C": 0.85,
+    "cod": 0.26,
+    "cod_adj": 0.221,
+    "size": 4.356,
+    "priority": 5.1,
+    "track": "projects",
+    "band": "SOMEDAY",
+    "blocked": false,
+    "blocks": []
+   }
+  },
+  {
+   "id": "gate-safety",
+   "what": "A gated item lands in NOW whatever it scores",
+   "input": {
+    "id": "gate-safety",
+    "cost": 320,
+    "cost_confidence": "quoted",
+    "effort": 3,
+    "risk": {
+     "probability": 1,
+     "consequence": 1
+    },
+    "value": {
+     "reach": 1,
+     "impact": {
+      "william": 1,
+      "partner": 1
+     }
+    },
+    "finance": {
+     "recoup_pct": 0,
+     "annual_savings": 0,
+     "annual_carrying_cost": 0
+    },
+    "urgency": "standard",
+    "identified": "2026-09-11",
+    "status": "open",
+    "gate": "safety"
+   },
+   "expect": {
+    "R": 0.4,
+    "V": 0.33,
+    "split": 0.0,
+    "fpr": 0.0,
+    "F": 0.0,
+    "E": 0.0,
+    "U": 1.0,
+    "C": 1.0,
+    "cod": 0.26,
+    "cod_adj": 0.26,
+    "size": 3.652,
+    "priority": 7.1,
+    "track": "projects",
+    "band": "NOW",
+    "blocked": false,
+    "blocks": []
+   }
+  },
+  {
+   "id": "gate-low-score",
+   "what": "Gate overrides a SOMEDAY-tier score",
+   "input": {
+    "id": "gate-low-score",
+    "cost": 50000,
+    "cost_confidence": "quoted",
+    "effort": 13,
+    "risk": {
+     "probability": 1,
+     "consequence": 1
+    },
+    "value": {
+     "reach": 1,
+     "impact": {
+      "william": 1,
+      "partner": 1
+     }
+    },
+    "finance": {
+     "recoup_pct": 0,
+     "annual_savings": 0,
+     "annual_carrying_cost": 0
+    },
+    "urgency": "standard",
+    "identified": "2026-09-11",
+    "status": "open",
+    "gate": "legal"
+   },
+   "expect": {
+    "R": 0.4,
+    "V": 0.33,
+    "split": 0.0,
+    "fpr": 0.0,
+    "F": 0.0,
+    "E": 0.0,
+    "U": 1.0,
+    "C": 1.0,
+    "cod": 0.26,
+    "cod_adj": 0.26,
+    "size": 13.862,
+    "priority": 1.9,
+    "track": "capital",
+    "band": "NOW",
+    "blocked": false,
+    "blocks": []
+   }
+  },
+  {
+   "id": "track-quick-edge-in",
+   "what": "cost 199 + effort 2 -> quick",
+   "input": {
+    "id": "track-quick-edge-in",
+    "cost": 199,
+    "cost_confidence": "quoted",
+    "effort": 2,
+    "risk": {
+     "probability": 1,
+     "consequence": 1
+    },
+    "value": {
+     "reach": 1,
+     "impact": {
+      "william": 1,
+      "partner": 1
+     }
+    },
+    "finance": {
+     "recoup_pct": 0,
+     "annual_savings": 0,
+     "annual_carrying_cost": 0
+    },
+    "urgency": "standard",
+    "identified": "2026-09-11",
+    "status": "open"
+   },
+   "expect": {
+    "R": 0.4,
+    "V": 0.33,
+    "split": 0.0,
+    "fpr": 0.0,
+    "F": 0.0,
+    "E": 0.0,
+    "U": 1.0,
+    "C": 1.0,
+    "cod": 0.26,
+    "cod_adj": 0.26,
+    "size": 3.016,
+    "priority": 8.6,
+    "track": "quick",
+    "band": "SOMEDAY",
+    "blocked": false,
+    "blocks": []
+   }
+  },
+  {
+   "id": "track-quick-edge-cost",
+   "what": "cost 200 + effort 2 -> projects (cost bound is exclusive)",
+   "input": {
+    "id": "track-quick-edge-cost",
+    "cost": 200,
+    "cost_confidence": "quoted",
+    "effort": 2,
+    "risk": {
+     "probability": 1,
+     "consequence": 1
+    },
+    "value": {
+     "reach": 1,
+     "impact": {
+      "william": 1,
+      "partner": 1
+     }
+    },
+    "finance": {
+     "recoup_pct": 0,
+     "annual_savings": 0,
+     "annual_carrying_cost": 0
+    },
+    "urgency": "standard",
+    "identified": "2026-09-11",
+    "status": "open"
+   },
+   "expect": {
+    "R": 0.4,
+    "V": 0.33,
+    "split": 0.0,
+    "fpr": 0.0,
+    "F": 0.0,
+    "E": 0.0,
+    "U": 1.0,
+    "C": 1.0,
+    "cod": 0.26,
+    "cod_adj": 0.26,
+    "size": 3.019,
+    "priority": 8.6,
+    "track": "projects",
+    "band": "SOMEDAY",
+    "blocked": false,
+    "blocks": []
+   }
+  },
+  {
+   "id": "track-quick-edge-effort",
+   "what": "cost 199 + effort 3 -> projects (effort bound is inclusive at 2)",
+   "input": {
+    "id": "track-quick-edge-effort",
+    "cost": 199,
+    "cost_confidence": "quoted",
+    "effort": 3,
+    "risk": {
+     "probability": 1,
+     "consequence": 1
+    },
+    "value": {
+     "reach": 1,
+     "impact": {
+      "william": 1,
+      "partner": 1
+     }
+    },
+    "finance": {
+     "recoup_pct": 0,
+     "annual_savings": 0,
+     "annual_carrying_cost": 0
+    },
+    "urgency": "standard",
+    "identified": "2026-09-11",
+    "status": "open"
+   },
+   "expect": {
+    "R": 0.4,
+    "V": 0.33,
+    "split": 0.0,
+    "fpr": 0.0,
+    "F": 0.0,
+    "E": 0.0,
+    "U": 1.0,
+    "C": 1.0,
+    "cod": 0.26,
+    "cod_adj": 0.26,
+    "size": 3.364,
+    "priority": 7.7,
+    "track": "projects",
+    "band": "SOMEDAY",
+    "blocked": false,
+    "blocks": []
+   }
+  },
+  {
+   "id": "track-capital-edge-in",
+   "what": "cost 10000 -> projects (capital bound is exclusive)",
+   "input": {
+    "id": "track-capital-edge-in",
+    "cost": 10000,
+    "cost_confidence": "quoted",
+    "effort": 3,
+    "risk": {
+     "probability": 1,
+     "consequence": 1
+    },
+    "value": {
+     "reach": 1,
+     "impact": {
+      "william": 1,
+      "partner": 1
+     }
+    },
+    "finance": {
+     "recoup_pct": 0,
+     "annual_savings": 0,
+     "annual_carrying_cost": 0
+    },
+    "urgency": "standard",
+    "identified": "2026-09-11",
+    "status": "open"
+   },
+   "expect": {
+    "R": 0.4,
+    "V": 0.33,
+    "split": 0.0,
+    "fpr": 0.0,
+    "F": 0.0,
+    "E": 0.0,
+    "U": 1.0,
+    "C": 1.0,
+    "cod": 0.26,
+    "cod_adj": 0.26,
+    "size": 5.801,
+    "priority": 4.5,
+    "track": "projects",
+    "band": "SOMEDAY",
+    "blocked": false,
+    "blocks": []
+   }
+  },
+  {
+   "id": "track-capital-edge-out",
+   "what": "cost 10001 -> capital",
+   "input": {
+    "id": "track-capital-edge-out",
+    "cost": 10001,
+    "cost_confidence": "quoted",
+    "effort": 3,
+    "risk": {
+     "probability": 1,
+     "consequence": 1
+    },
+    "value": {
+     "reach": 1,
+     "impact": {
+      "william": 1,
+      "partner": 1
+     }
+    },
+    "finance": {
+     "recoup_pct": 0,
+     "annual_savings": 0,
+     "annual_carrying_cost": 0
+    },
+    "urgency": "standard",
+    "identified": "2026-09-11",
+    "status": "open"
+   },
+   "expect": {
+    "R": 0.4,
+    "V": 0.33,
+    "split": 0.0,
+    "fpr": 0.0,
+    "F": 0.0,
+    "E": 0.0,
+    "U": 1.0,
+    "C": 1.0,
+    "cod": 0.26,
+    "cod_adj": 0.26,
+    "size": 5.801,
+    "priority": 4.5,
+    "track": "capital",
+    "band": "SOMEDAY",
+    "blocked": false,
+    "blocks": []
+   }
+  },
+  {
+   "id": "ceiling-max",
+   "what": "Everything maxed at $1k/1 effort \u2014 shows the top of the usable range",
+   "input": {
+    "id": "ceiling-max",
+    "cost": 1000,
+    "cost_confidence": "quoted",
+    "effort": 1,
+    "risk": {
+     "probability": 5,
+     "consequence": 5
+    },
+    "value": {
+     "reach": 10,
+     "impact": {
+      "william": 3,
+      "partner": 3
+     }
+    },
+    "finance": {
+     "recoup_pct": 2.0,
+     "annual_savings": 0,
+     "annual_carrying_cost": 0
+    },
+    "urgency": "standard",
+    "identified": "2026-09-11",
+    "status": "open"
+   },
+   "expect": {
+    "R": 10.0,
+    "V": 10.0,
+    "split": 0.0,
+    "fpr": 2.0,
+    "F": 8.5,
+    "E": 0.0,
+    "U": 1.0,
+    "C": 1.0,
+    "cod": 8.7,
+    "cod_adj": 8.7,
+    "size": 3.455,
+    "priority": 251.8,
+    "track": "projects",
+    "band": "NOW",
+    "blocked": false,
+    "blocks": []
+   }
+  },
+  {
+   "id": "enable-none",
+   "what": "No dependents -> E 0",
+   "input": {
+    "id": "enable-none",
+    "cost": 1000,
+    "cost_confidence": "quoted",
+    "effort": 3,
+    "risk": {
+     "probability": 1,
+     "consequence": 1
+    },
+    "value": {
+     "reach": 1,
+     "impact": {
+      "william": 1,
+      "partner": 1
+     }
+    },
+    "finance": {
+     "recoup_pct": 0,
+     "annual_savings": 0,
+     "annual_carrying_cost": 0
+    },
+    "urgency": "standard",
+    "identified": "2026-09-11",
+    "status": "open"
+   },
+   "expect": {
+    "R": 0.4,
+    "V": 0.33,
+    "split": 0.0,
+    "fpr": 0.0,
+    "F": 0.0,
+    "E": 0.0,
+    "U": 1.0,
+    "C": 1.0,
+    "cod": 0.26,
+    "cod_adj": 0.26,
+    "size": 4.356,
+    "priority": 6.0,
+    "track": "projects",
+    "band": "SOMEDAY",
+    "blocked": false,
+    "blocks": []
+   }
+  },
+  {
+   "id": "enable-one",
+   "what": "One dependent -> E 7",
+   "input": {
+    "id": "enable-one",
+    "cost": 1000,
+    "cost_confidence": "quoted",
+    "effort": 3,
+    "risk": {
+     "probability": 1,
+     "consequence": 1
+    },
+    "value": {
+     "reach": 1,
+     "impact": {
+      "william": 1,
+      "partner": 1
+     }
+    },
+    "finance": {
+     "recoup_pct": 0,
+     "annual_savings": 0,
+     "annual_carrying_cost": 0
+    },
+    "urgency": "standard",
+    "identified": "2026-09-11",
+    "status": "open"
+   },
+   "expect": {
+    "R": 0.4,
+    "V": 0.33,
+    "split": 0.0,
+    "fpr": 0.0,
+    "F": 0.0,
+    "E": 7.0,
+    "U": 1.0,
+    "C": 1.0,
+    "cod": 0.96,
+    "cod_adj": 0.96,
+    "size": 4.356,
+    "priority": 22.0,
+    "track": "projects",
+    "band": "SOMEDAY",
+    "blocked": false,
+    "blocks": [
+     "dep-child-c"
+    ]
+   }
+  },
+  {
+   "id": "enable-two",
+   "what": "Two or more dependents -> E 10",
+   "input": {
+    "id": "enable-two",
+    "cost": 1000,
+    "cost_confidence": "quoted",
+    "effort": 3,
+    "risk": {
+     "probability": 1,
+     "consequence": 1
+    },
+    "value": {
+     "reach": 1,
+     "impact": {
+      "william": 1,
+      "partner": 1
+     }
+    },
+    "finance": {
+     "recoup_pct": 0,
+     "annual_savings": 0,
+     "annual_carrying_cost": 0
+    },
+    "urgency": "standard",
+    "identified": "2026-09-11",
+    "status": "open"
+   },
+   "expect": {
+    "R": 0.4,
+    "V": 0.33,
+    "split": 0.0,
+    "fpr": 0.0,
+    "F": 0.0,
+    "E": 10.0,
+    "U": 1.0,
+    "C": 1.0,
+    "cod": 1.26,
+    "cod_adj": 1.26,
+    "size": 4.356,
+    "priority": 28.9,
+    "track": "projects",
+    "band": "SOMEDAY",
+    "blocked": false,
+    "blocks": [
+     "blocked-multi",
+     "dep-child-a",
+     "dep-child-b"
+    ]
+   }
+  },
+  {
+   "id": "dep-child-a",
+   "what": "Blocked: prerequisite enable-two is still open",
+   "input": {
+    "id": "dep-child-a",
+    "cost": 1000,
+    "cost_confidence": "quoted",
+    "effort": 3,
+    "risk": {
+     "probability": 1,
+     "consequence": 1
+    },
+    "value": {
+     "reach": 1,
+     "impact": {
+      "william": 1,
+      "partner": 1
+     }
+    },
+    "finance": {
+     "recoup_pct": 0,
+     "annual_savings": 0,
+     "annual_carrying_cost": 0
+    },
+    "urgency": "standard",
+    "identified": "2026-09-11",
+    "status": "open",
+    "depends_on": [
+     "enable-two"
+    ]
+   },
+   "expect": {
+    "R": 0.4,
+    "V": 0.33,
+    "split": 0.0,
+    "fpr": 0.0,
+    "F": 0.0,
+    "E": 7.0,
+    "U": 1.0,
+    "C": 1.0,
+    "cod": 0.96,
+    "cod_adj": 0.96,
+    "size": 4.356,
+    "priority": 22.0,
+    "track": "projects",
+    "band": "SOMEDAY",
+    "blocked": true,
+    "blocks": [
+     "blocked-multi"
+    ]
+   }
+  },
+  {
+   "id": "dep-child-b",
+   "what": "Depends on enable-two only",
+   "input": {
+    "id": "dep-child-b",
+    "cost": 1000,
+    "cost_confidence": "quoted",
+    "effort": 3,
+    "risk": {
+     "probability": 1,
+     "consequence": 1
+    },
+    "value": {
+     "reach": 1,
+     "impact": {
+      "william": 1,
+      "partner": 1
+     }
+    },
+    "finance": {
+     "recoup_pct": 0,
+     "annual_savings": 0,
+     "annual_carrying_cost": 0
+    },
+    "urgency": "standard",
+    "identified": "2026-09-11",
+    "status": "open",
+    "depends_on": [
+     "enable-two"
+    ]
+   },
+   "expect": {
+    "R": 0.4,
+    "V": 0.33,
+    "split": 0.0,
+    "fpr": 0.0,
+    "F": 0.0,
+    "E": 0.0,
+    "U": 1.0,
+    "C": 1.0,
+    "cod": 0.26,
+    "cod_adj": 0.26,
+    "size": 4.356,
+    "priority": 6.0,
+    "track": "projects",
+    "band": "SOMEDAY",
+    "blocked": true,
+    "blocks": []
+   }
+  },
+  {
+   "id": "dep-child-c",
+   "what": "The single dependent of enable-one",
+   "input": {
+    "id": "dep-child-c",
+    "cost": 1000,
+    "cost_confidence": "quoted",
+    "effort": 3,
+    "risk": {
+     "probability": 1,
+     "consequence": 1
+    },
+    "value": {
+     "reach": 1,
+     "impact": {
+      "william": 1,
+      "partner": 1
+     }
+    },
+    "finance": {
+     "recoup_pct": 0,
+     "annual_savings": 0,
+     "annual_carrying_cost": 0
+    },
+    "urgency": "standard",
+    "identified": "2026-09-11",
+    "status": "open",
+    "depends_on": [
+     "enable-one"
+    ]
+   },
+   "expect": {
+    "R": 0.4,
+    "V": 0.33,
+    "split": 0.0,
+    "fpr": 0.0,
+    "F": 0.0,
+    "E": 0.0,
+    "U": 1.0,
+    "C": 1.0,
+    "cod": 0.26,
+    "cod_adj": 0.26,
+    "size": 4.356,
+    "priority": 6.0,
+    "track": "projects",
+    "band": "SOMEDAY",
+    "blocked": true,
+    "blocks": []
+   }
+  },
+  {
+   "id": "enable-mirror",
+   "what": "Declares `enables` one-sidedly; must still produce the edge",
+   "input": {
+    "id": "enable-mirror",
+    "cost": 1000,
+    "cost_confidence": "quoted",
+    "effort": 3,
+    "risk": {
+     "probability": 1,
+     "consequence": 1
+    },
+    "value": {
+     "reach": 1,
+     "impact": {
+      "william": 1,
+      "partner": 1
+     }
+    },
+    "finance": {
+     "recoup_pct": 0,
+     "annual_savings": 0,
+     "annual_carrying_cost": 0
+    },
+    "urgency": "standard",
+    "identified": "2026-09-11",
+    "status": "open",
+    "enables": [
+     "dep-child-b"
+    ]
+   },
+   "expect": {
+    "R": 0.4,
+    "V": 0.33,
+    "split": 0.0,
+    "fpr": 0.0,
+    "F": 0.0,
+    "E": 7.0,
+    "U": 1.0,
+    "C": 1.0,
+    "cod": 0.96,
+    "cod_adj": 0.96,
+    "size": 4.356,
+    "priority": 22.0,
+    "track": "projects",
+    "band": "SOMEDAY",
+    "blocked": false,
+    "blocks": [
+     "dep-child-b"
+    ]
+   }
+  },
+  {
+   "id": "enable-done-ignored",
+   "what": "A dependent marked done must not count toward E",
+   "input": {
+    "id": "enable-done-ignored",
+    "cost": 1000,
+    "cost_confidence": "quoted",
+    "effort": 3,
+    "risk": {
+     "probability": 1,
+     "consequence": 1
+    },
+    "value": {
+     "reach": 1,
+     "impact": {
+      "william": 1,
+      "partner": 1
+     }
+    },
+    "finance": {
+     "recoup_pct": 0,
+     "annual_savings": 0,
+     "annual_carrying_cost": 0
+    },
+    "urgency": "standard",
+    "identified": "2026-09-11",
+    "status": "open",
+    "enables": [
+     "dep-done-child"
+    ]
+   },
+   "expect": {
+    "R": 0.4,
+    "V": 0.33,
+    "split": 0.0,
+    "fpr": 0.0,
+    "F": 0.0,
+    "E": 0.0,
+    "U": 1.0,
+    "C": 1.0,
+    "cod": 0.26,
+    "cod_adj": 0.26,
+    "size": 4.356,
+    "priority": 6.0,
+    "track": "projects",
+    "band": "SOMEDAY",
+    "blocked": false,
+    "blocks": []
+   }
+  },
+  {
+   "id": "dep-done-child",
+   "what": "Completed dependent",
+   "input": {
+    "id": "dep-done-child",
+    "cost": 1000,
+    "cost_confidence": "quoted",
+    "effort": 3,
+    "risk": {
+     "probability": 1,
+     "consequence": 1
+    },
+    "value": {
+     "reach": 1,
+     "impact": {
+      "william": 1,
+      "partner": 1
+     }
+    },
+    "finance": {
+     "recoup_pct": 0,
+     "annual_savings": 0,
+     "annual_carrying_cost": 0
+    },
+    "urgency": "standard",
+    "identified": "2026-09-11",
+    "status": "done",
+    "depends_on": [
+     "enable-done-ignored"
+    ]
+   },
+   "expect": {
+    "scored": false
+   }
+  },
+  {
+   "id": "blocked-satisfied",
+   "what": "Prerequisite is done -> blocked False, and it still scores normally",
+   "input": {
+    "id": "blocked-satisfied",
+    "cost": 1000,
+    "cost_confidence": "quoted",
+    "effort": 3,
+    "risk": {
+     "probability": 1,
+     "consequence": 1
+    },
+    "value": {
+     "reach": 1,
+     "impact": {
+      "william": 1,
+      "partner": 1
+     }
+    },
+    "finance": {
+     "recoup_pct": 0,
+     "annual_savings": 0,
+     "annual_carrying_cost": 0
+    },
+    "urgency": "standard",
+    "identified": "2026-09-11",
+    "status": "open",
+    "depends_on": [
+     "dep-done-child"
+    ]
+   },
+   "expect": {
+    "R": 0.4,
+    "V": 0.33,
+    "split": 0.0,
+    "fpr": 0.0,
+    "F": 0.0,
+    "E": 0.0,
+    "U": 1.0,
+    "C": 1.0,
+    "cod": 0.26,
+    "cod_adj": 0.26,
+    "size": 4.356,
+    "priority": 6.0,
+    "track": "projects",
+    "band": "SOMEDAY",
+    "blocked": false,
+    "blocks": []
+   }
+  },
+  {
+   "id": "blocked-multi",
+   "what": "Two open prerequisites -> blocked True",
+   "input": {
+    "id": "blocked-multi",
+    "cost": 1000,
+    "cost_confidence": "quoted",
+    "effort": 3,
+    "risk": {
+     "probability": 1,
+     "consequence": 1
+    },
+    "value": {
+     "reach": 1,
+     "impact": {
+      "william": 1,
+      "partner": 1
+     }
+    },
+    "finance": {
+     "recoup_pct": 0,
+     "annual_savings": 0,
+     "annual_carrying_cost": 0
+    },
+    "urgency": "standard",
+    "identified": "2026-09-11",
+    "status": "open",
+    "depends_on": [
+     "enable-two",
+     "dep-child-a"
+    ]
+   },
+   "expect": {
+    "R": 0.4,
+    "V": 0.33,
+    "split": 0.0,
+    "fpr": 0.0,
+    "F": 0.0,
+    "E": 0.0,
+    "U": 1.0,
+    "C": 1.0,
+    "cod": 0.26,
+    "cod_adj": 0.26,
+    "size": 4.356,
+    "priority": 6.0,
+    "track": "projects",
+    "band": "SOMEDAY",
+    "blocked": true,
+    "blocks": []
+   }
+  }
+ ]
+}

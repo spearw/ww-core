@@ -1,0 +1,135 @@
+{
+  "suites": [
+    {
+      "name": "rules",
+      "members": ["william", "partner"],
+      "base": {
+        "cost": 1000, "cost_confidence": "quoted", "effort": 3,
+        "risk": { "probability": 1, "consequence": 1 },
+        "value": { "reach": 1, "impact": { "william": 1, "partner": 1 } },
+        "finance": { "recoup_pct": 0, "annual_savings": 0, "annual_carrying_cost": 0 },
+        "urgency": "standard", "identified": "2026-09-11", "status": "open"
+      },
+      "cases": [
+        { "id": "fa-rv-only", "what": "D20: F and E zero -> ignored", "input": { "risk": { "probability": 3, "consequence": 4 }, "value": { "reach": 5 } } },
+        { "id": "fa-money-helps", "what": "D20: F above the R/V average counts", "input": { "risk": { "probability": 3, "consequence": 4 }, "value": { "reach": 5 }, "finance": { "annual_savings": 200 } } },
+        { "id": "fa-money-small", "what": "D20: F below the R/V average is ignored", "input": { "risk": { "probability": 3, "consequence": 4 }, "value": { "reach": 5 }, "finance": { "annual_savings": 25 } } },
+        { "id": "fa-unlocks", "what": "D20: E = 10 counts", "input": { "risk": { "probability": 3, "consequence": 4 }, "value": { "reach": 5 } } },
+        { "id": "fa-unlocks-kid-1", "what": "Dependent of fa-unlocks", "input": { "depends_on": ["fa-unlocks"] } },
+        { "id": "fa-unlocks-kid-2", "what": "Dependent of fa-unlocks", "input": { "depends_on": ["fa-unlocks"] } },
+        { "id": "fa-order", "what": "D20: E first, then F falls below the new average", "input": { "value": { "reach": 3 }, "finance": { "annual_savings": 25 } } },
+        { "id": "fa-order-kid-1", "what": "Dependent of fa-order", "input": { "depends_on": ["fa-order"] } },
+        { "id": "fa-order-kid-2", "what": "Dependent of fa-order", "input": { "depends_on": ["fa-order"] } },
+        { "id": "fa-all-four", "what": "D20: all four count -> equals WW's cod", "input": { "value": { "reach": 3 }, "finance": { "annual_savings": 50 } } },
+        { "id": "fa-all-four-kid", "what": "Dependent of fa-all-four", "input": { "depends_on": ["fa-all-four"] } },
+        { "id": "hard-none", "what": "D21: real deadline with no date", "input": { "urgency": "hard_deadline" } },
+        { "id": "hard-far", "what": "D21: a year out", "input": { "urgency": "hard_deadline", "deadline": "2027-09-11" } },
+        { "id": "hard-4mo", "what": "D21: ramping", "input": { "urgency": "hard_deadline", "deadline": "2027-01-11" } },
+        { "id": "hard-31d", "what": "D21: one day outside the forced window", "input": { "urgency": "hard_deadline", "deadline": "2026-10-12" } },
+        { "id": "hard-30d", "what": "D21: edge of the forced window", "input": { "urgency": "hard_deadline", "deadline": "2026-10-11" } },
+        { "id": "hard-today", "what": "D21: due today, not overdue", "input": { "urgency": "hard_deadline", "deadline": "2026-09-11" } },
+        { "id": "hard-overdue", "what": "D21: passed stays at 2.5, overdue", "input": { "urgency": "hard_deadline", "deadline": "2026-09-01" } },
+        { "id": "target-none", "what": "D21: target with no date", "input": { "urgency": "target_date" } },
+        { "id": "target-4mo", "what": "D21: outside the 3-month ramp", "input": { "urgency": "target_date", "deadline": "2027-01-11" } },
+        { "id": "target-1mo", "what": "D21: ramping, never forced", "input": { "urgency": "target_date", "deadline": "2026-10-11" } },
+        { "id": "target-passed", "what": "D21: passed stays at 1.5", "input": { "urgency": "target_date", "deadline": "2026-09-01" } },
+        { "id": "expedite", "what": "Drop everything: U = 2", "input": { "urgency": "expedite" } },
+        { "id": "intangible-old", "what": "Escalating after 5 years", "input": { "urgency": "intangible", "identified": "2021-09-11", "risk": { "probability": 3, "consequence": 4 } } },
+        { "id": "constant-old", "what": "Every month counts, capped", "input": { "urgency": "constant_benefit", "identified": "2016-09-11" } },
+        { "id": "nn-health", "what": "Non-negotiable health -> NOW", "input": { "non_negotiable": "health" } },
+        { "id": "nn-safety-costly", "what": "Non-negotiable with a tiny score -> NOW, sorts first", "input": { "non_negotiable": "safety", "cost": 50000 } },
+        { "id": "quick-in", "what": "Quick win: cost < 200, effort <= 2", "input": { "cost": 199, "effort": 2 } },
+        { "id": "quick-cost-edge", "what": "Not a quick win: cost 200", "input": { "cost": 200, "effort": 1 } },
+        { "id": "quick-effort-edge", "what": "Not a quick win: effort 3", "input": { "cost": 100, "effort": 3 } },
+        { "id": "guess-big", "what": "Guessed $20k with no payback", "input": { "cost": 20000, "cost_confidence": "guess" } },
+        { "id": "conf-estimate", "what": "C = 0.85", "input": { "cost_confidence": "estimate" } },
+        { "id": "conf-unknown", "what": "Unknown confidence -> 0.85", "input": { "cost_confidence": null } },
+        { "id": "status-deferred", "what": "Deferred is scored", "input": { "status": "deferred" } },
+        { "id": "ip-parent", "what": "In progress is scored and still blocks", "input": { "status": "in_progress" } },
+        { "id": "ip-child", "what": "Blocked by an in-progress prerequisite", "input": { "depends_on": ["ip-parent"] } },
+        { "id": "done-parent", "what": "Done: not scored, satisfies dependents", "input": { "status": "done" } },
+        { "id": "done-child", "what": "Prerequisite done -> not blocked", "input": { "depends_on": ["done-parent"] } },
+        { "id": "dropped-parent", "what": "Dropped: ignored entirely", "input": { "status": "dropped" } },
+        { "id": "dropped-child", "what": "Prerequisite dropped -> not blocked", "input": { "depends_on": ["dropped-parent"] } },
+        { "id": "ghost-dep", "what": "Unknown prerequisite is ignored", "input": { "depends_on": ["no-such-project"] } },
+        { "id": "cycle-a", "what": "Two-project cycle: both blocked", "input": { "depends_on": ["cycle-b"] } },
+        { "id": "cycle-b", "what": "Two-project cycle: both blocked", "input": { "depends_on": ["cycle-a"] } },
+        { "id": "self-link", "what": "Self-dependency: blocked, no crash", "input": { "depends_on": ["self-link"] } },
+        { "id": "disagree", "what": "Members far apart -> disagree", "input": { "value": { "reach": 10, "impact": { "william": 3, "partner": 0.25 } } } },
+        { "id": "zero-cost", "what": "Free and quick stays finite", "input": { "cost": 0, "effort": 1 } },
+        { "id": "money-loss", "what": "Upkeep above savings -> F = 0", "input": { "finance": { "annual_carrying_cost": 500 } } },
+        { "id": "cost-zero", "what": "P5c-6: $0 ranks as the Under $50 chip", "input": { "cost": 0 } },
+        { "id": "cost-thirty", "what": "P5c-6: $30, the Under $50 chip amount", "input": { "cost": 30 } }
+      ]
+    },
+    {
+      "name": "members",
+      "members": ["you", "partner"],
+      "base": {
+        "cost": 1000, "cost_confidence": "quoted", "effort": 3,
+        "risk": { "probability": 1, "consequence": 1 },
+        "value": { "reach": 1, "impact": { "you": 1 } },
+        "finance": { "recoup_pct": 0, "annual_savings": 0, "annual_carrying_cost": 0 },
+        "urgency": "standard", "identified": "2026-09-11", "status": "open"
+      },
+      "cases": [
+        { "id": "unrated-partner", "what": "D33: a member who hasn't rated counts at 1", "input": { "value": { "reach": 5, "impact": { "you": 3 } } } },
+        { "id": "stranger", "what": "D33: a non-member's rating is ignored", "input": { "value": { "reach": 3, "impact": { "stranger": 3 } } } }
+      ]
+    },
+    {
+      "name": "nobody",
+      "members": [],
+      "base": {
+        "cost": 1000, "cost_confidence": "quoted", "effort": 3,
+        "risk": { "probability": 3, "consequence": 3 },
+        "value": { "reach": 5, "impact": {} },
+        "finance": { "recoup_pct": 0, "annual_savings": 0, "annual_carrying_cost": 0 },
+        "urgency": "standard", "identified": "2026-09-11", "status": "open"
+      },
+      "cases": [
+        { "id": "no-members", "what": "Empty member list -> V = 0, no NaN (review focus 5)", "input": {} }
+      ]
+    },
+    {
+      "name": "calibration",
+      "members": ["you"],
+      "base": {
+        "finance": { "recoup_pct": 0, "annual_savings": 0, "annual_carrying_cost": 0 },
+        "urgency": "standard", "identified": "2026-09-11", "status": "open"
+      },
+      "cases": [
+        { "id": "home-smoke-alarms", "what": "calibration", "input": { "title": "Replace the smoke alarm batteries", "cost": 30, "cost_confidence": "quoted", "effort": 1, "risk": { "probability": 3, "consequence": 5 }, "value": { "reach": 1, "impact": { "you": 1 } } } },
+        { "id": "home-roof-leak", "what": "calibration", "input": { "title": "Fix the roof leak over the porch", "cost": 1800, "cost_confidence": "estimate", "effort": 3, "risk": { "probability": 4, "consequence": 4 }, "value": { "reach": 3, "impact": { "you": 1 } }, "urgency": "intangible", "identified": "2025-09-11" } },
+        { "id": "home-kitchen", "what": "calibration", "input": { "title": "Redo the kitchen", "cost": 35000, "cost_confidence": "guess", "effort": 13, "risk": { "probability": 1, "consequence": 1 }, "value": { "reach": 10, "impact": { "you": 2 } }, "finance": { "recoup_pct": 0.5 } } },
+        { "id": "home-water-heater", "what": "calibration", "input": { "title": "Replace the 14-year-old water heater", "cost": 1600, "cost_confidence": "estimate", "effort": 2, "risk": { "probability": 3, "consequence": 3 }, "value": { "reach": 10, "impact": { "you": 1 } }, "finance": { "annual_savings": 60 } } },
+        { "id": "home-insulation", "what": "calibration", "input": { "title": "Insulate the attic", "cost": 2500, "cost_confidence": "estimate", "effort": 3, "risk": { "probability": 1, "consequence": 2 }, "value": { "reach": 10, "impact": { "you": 1 } }, "finance": { "annual_savings": 400 }, "urgency": "constant_benefit", "depends_on": ["home-roof-leak"] } },
+        { "id": "home-paint-bedroom", "what": "calibration", "input": { "title": "Paint the bedroom", "cost": 300, "cost_confidence": "quoted", "effort": 5, "risk": { "probability": 1, "consequence": 1 }, "value": { "reach": 10, "impact": { "you": 0.5 } } } },
+        { "id": "home-gutters", "what": "calibration", "input": { "title": "Clean the gutters", "cost": 150, "cost_confidence": "quoted", "effort": 2, "risk": { "probability": 3, "consequence": 3 }, "value": { "reach": 1, "impact": { "you": 0.5 } } } },
+        { "id": "home-fence", "what": "calibration", "input": { "title": "Replace the leaning fence", "cost": 4000, "cost_confidence": "guess", "effort": 5, "risk": { "probability": 2, "consequence": 2 }, "value": { "reach": 8, "impact": { "you": 0.5 } } } },
+        { "id": "car-brakes", "what": "calibration", "input": { "title": "Fix the grinding brakes", "cost": 600, "cost_confidence": "estimate", "effort": 2, "risk": { "probability": 4, "consequence": 5 }, "value": { "reach": 10, "impact": { "you": 1 } }, "urgency": "intangible" } },
+        { "id": "car-oil", "what": "calibration", "input": { "title": "Oil change", "cost": 80, "cost_confidence": "quoted", "effort": 1, "risk": { "probability": 3, "consequence": 2 }, "value": { "reach": 1, "impact": { "you": 0.25 } } } },
+        { "id": "car-tires", "what": "calibration", "input": { "title": "New tires before winter", "cost": 900, "cost_confidence": "estimate", "effort": 1, "risk": { "probability": 3, "consequence": 4 }, "value": { "reach": 8, "impact": { "you": 1 } }, "urgency": "hard_deadline", "deadline": "2026-12-15" } },
+        { "id": "car-replace", "what": "calibration", "input": { "title": "Replace the car", "cost": 28000, "cost_confidence": "guess", "effort": 8, "risk": { "probability": 2, "consequence": 3 }, "value": { "reach": 10, "impact": { "you": 2 } }, "finance": { "recoup_pct": 0.4 } } },
+        { "id": "money-will", "what": "calibration", "input": { "title": "Write a will", "cost": 400, "cost_confidence": "estimate", "effort": 2, "risk": { "probability": 1, "consequence": 5 }, "value": { "reach": 1, "impact": { "you": 1 } } } },
+        { "id": "money-refinance", "what": "calibration", "input": { "title": "Refinance the mortgage", "cost": 3000, "cost_confidence": "estimate", "effort": 3, "risk": { "probability": 1, "consequence": 2 }, "value": { "reach": 1, "impact": { "you": 1 } }, "finance": { "annual_savings": 2400 }, "urgency": "constant_benefit" } },
+        { "id": "money-budget", "what": "calibration", "input": { "title": "Set up a monthly budget", "cost": 0, "cost_confidence": "quoted", "effort": 2, "risk": { "probability": 2, "consequence": 3 }, "value": { "reach": 5, "impact": { "you": 1 } } } },
+        { "id": "money-subscriptions", "what": "calibration", "input": { "title": "Cancel unused subscriptions", "cost": 0, "cost_confidence": "quoted", "effort": 1, "risk": { "probability": 1, "consequence": 1 }, "value": { "reach": 5, "impact": { "you": 0.5 } }, "finance": { "annual_savings": 300 } } },
+        { "id": "health-dentist", "what": "calibration", "input": { "title": "Book the overdue dentist checkup", "cost": 150, "cost_confidence": "estimate", "effort": 1, "risk": { "probability": 3, "consequence": 4 }, "value": { "reach": 1, "impact": { "you": 1 } }, "urgency": "intangible", "identified": "2026-03-11" } },
+        { "id": "health-gym", "what": "calibration", "input": { "title": "Start going to the gym", "cost": 600, "cost_confidence": "quoted", "effort": 8, "risk": { "probability": 2, "consequence": 3 }, "value": { "reach": 8, "impact": { "you": 2 } } } },
+        { "id": "health-snoring", "what": "calibration", "input": { "title": "Get the snoring checked", "cost": 250, "cost_confidence": "estimate", "effort": 2, "risk": { "probability": 3, "consequence": 4 }, "value": { "reach": 10, "impact": { "you": 2 } } } },
+        { "id": "health-glasses", "what": "calibration", "input": { "title": "New glasses prescription", "cost": 300, "cost_confidence": "estimate", "effort": 1, "risk": { "probability": 2, "consequence": 2 }, "value": { "reach": 10, "impact": { "you": 1 } } } },
+        { "id": "career-cert", "what": "calibration", "input": { "title": "Get the AWS certification", "cost": 300, "cost_confidence": "quoted", "effort": 8, "risk": { "probability": 1, "consequence": 2 }, "value": { "reach": 5, "impact": { "you": 2 } }, "finance": { "annual_savings": 5000 } } },
+        { "id": "career-resume", "what": "calibration", "input": { "title": "Update the resume", "cost": 0, "cost_confidence": "quoted", "effort": 2, "risk": { "probability": 2, "consequence": 2 }, "value": { "reach": 1, "impact": { "you": 1 } } } },
+        { "id": "career-side-biz", "what": "calibration", "input": { "title": "Start the side business", "cost": 5000, "cost_confidence": "guess", "effort": 20, "risk": { "probability": 1, "consequence": 1 }, "value": { "reach": 8, "impact": { "you": 2 } }, "finance": { "annual_savings": 3000 } } },
+        { "id": "learn-spanish", "what": "calibration", "input": { "title": "Learn Spanish", "cost": 200, "cost_confidence": "estimate", "effort": 13, "risk": { "probability": 1, "consequence": 1 }, "value": { "reach": 8, "impact": { "you": 2 } } } },
+        { "id": "learn-guitar", "what": "calibration", "input": { "title": "Take guitar lessons", "cost": 1200, "cost_confidence": "quoted", "effort": 8, "risk": { "probability": 1, "consequence": 1 }, "value": { "reach": 8, "impact": { "you": 1 } } } },
+        { "id": "learn-cooking", "what": "calibration", "input": { "title": "Take a cooking class", "cost": 150, "cost_confidence": "quoted", "effort": 3, "risk": { "probability": 1, "consequence": 1 }, "value": { "reach": 5, "impact": { "you": 1 } } } },
+        { "id": "family-reunion", "what": "calibration", "input": { "title": "Plan the family reunion", "cost": 2000, "cost_confidence": "guess", "effort": 8, "risk": { "probability": 1, "consequence": 2 }, "value": { "reach": 1, "impact": { "you": 2 } }, "urgency": "target_date", "deadline": "2027-06-01" } },
+        { "id": "family-photos", "what": "calibration", "input": { "title": "Sort the family photos", "cost": 0, "cost_confidence": "quoted", "effort": 8, "risk": { "probability": 1, "consequence": 2 }, "value": { "reach": 1, "impact": { "you": 1 } } } },
+        { "id": "personal-closet", "what": "calibration", "input": { "title": "Clear out the closet", "cost": 0, "cost_confidence": "quoted", "effort": 3, "risk": { "probability": 1, "consequence": 1 }, "value": { "reach": 10, "impact": { "you": 0.5 } } } },
+        { "id": "personal-friends", "what": "calibration", "input": { "title": "Plan a weekend with old friends", "cost": 800, "cost_confidence": "estimate", "effort": 5, "risk": { "probability": 2, "consequence": 2 }, "value": { "reach": 1, "impact": { "you": 2 } } } }
+      ]
+    }
+  ]
+}
