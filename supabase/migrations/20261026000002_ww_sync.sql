@@ -3,6 +3,9 @@
 -- ww_push / ww_pull are the only sync RPCs and run as the caller, so RLS applies to every row.
 
 create sequence public.ww_seq;
+-- Supabase's default privileges grant ALL on a new sequence to anon and authenticated; setval
+-- would rewind every household's cursor. Only nextval (USAGE) is needed, by the stamp trigger.
+revoke all on sequence public.ww_seq from public, anon, authenticated;
 grant usage on sequence public.ww_seq to authenticated;
 
 -- The registry: table_name is the bare name the phone uses. Written only by ww_make_synced.

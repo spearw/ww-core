@@ -1,6 +1,6 @@
 begin;
 create extension if not exists pgtap with schema extensions;
-select plan(63);
+select plan(71);
 
 -- Will (a1) and Katie (a2) share 'h'; Will also has 'w2', Katie 'k2'; the outsider (a3) has 'o1'.
 insert into auth.users (id, email) values
@@ -187,7 +187,12 @@ select lives_ok($$ update ww_member_profile set archetype = 'kate' where id = '0
   'R3: Katie updates her own profile');
 select throws_ok($$ update ww_member_profile set member_id = '00000000-0000-0000-0000-0000000000a1' where id = '00000000-0000-0000-0000-0000000000c4' $$,
   '42501', null, 'R3: Katie cannot hand her profile row to Will');
-select is((select archetype from ww_member_profile where id = '00000000-0000-0000-0000-0000000000c1'), 'will', 'R3: Will''s profile is unchanged');
+select is(pg_temp.reason(pg_temp.push1('ww_member_profile', jsonb_build_object(
+  'id', '00000000-0000-0000-0000-0000000000c1', 'list_id', pg_temp.v('h'),
+  'member_id', '00000000-0000-0000-0000-0000000000a2', 'weights', '{}'::jsonb, 'archetype', 'taken'))),
+  'not_allowed', 'R3: Katie taking over Will''s profile row (member_id = Katie) is not_allowed');
+select is((select (archetype, member_id) from ww_member_profile where id = '00000000-0000-0000-0000-0000000000c1'),
+  row('will'::text, '00000000-0000-0000-0000-0000000000a1'::uuid), 'R3: Will''s profile is unchanged');
 
 -- R10: paging
 set local request.jwt.claims = '{"sub": "00000000-0000-0000-0000-0000000000a2"}';
@@ -231,7 +236,16 @@ set local role authenticated;
 
 -- R12
 select throws_ok($$ select ww_push((select jsonb_agg(jsonb_build_object('table', 'ww_test_item', 'row', '{}'::jsonb)) from generate_series(1, 501))) $$,
-  null, null, 'R12: 501 changes is an error');
+  '54000', null, 'R12: 501 changes is an error (54000)');
+
+-- privileges and function properties
+select is(has_sequence_privilege('anon', 'public.ww_seq', 'UPDATE'), false, 'R8: anon cannot setval ww_seq');
+select is(has_sequence_privilege('authenticated', 'public.ww_seq', 'UPDATE'), false, 'R8: authenticated cannot setval ww_seq');
+select is(has_sequence_privilege('authenticated', 'public.ww_seq', 'USAGE'), true, 'R8: authenticated keeps USAGE for nextval');
+select volatility_is('public', 'ww_pull', ARRAY['jsonb', 'integer'], 'stable', 'R11: ww_pull is stable');
+select isnt_definer('public', 'ww_push', ARRAY['jsonb'], 'R2: ww_push is security invoker');
+select isnt_definer('public', 'ww_pull', ARRAY['jsonb', 'integer'], 'R2: ww_pull is security invoker');
+select isnt_definer('public', 'ww_make_synced', ARRAY['regclass'], 'R1: ww_make_synced runs as the migration''s role');
 
 select * from finish();
 rollback;
