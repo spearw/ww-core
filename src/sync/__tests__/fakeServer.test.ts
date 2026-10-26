@@ -88,6 +88,35 @@ describe('fake server', () => {
     expect(res.rejected[0]!.reason).toBe('invalid');
   });
 
+  it('invalid: a new row without list_id', async () => {
+    const { w } = setup();
+    const res = await w.push([{ table: T, row: { id: 'new', title: 'A' } }]);
+    expect(res.rejected).toEqual([{ table: T, id: 'new', reason: 'invalid' }]);
+    expect(res.accepted).toEqual([]);
+  });
+
+  it('R2/R4 ruling: no list_id and the stored row in a list the caller is not in is invalid', async () => {
+    const { s, w, L } = setup();
+    await w.push([{ table: T, row: { id: 'i1', list_id: L, title: 'A' } }]);
+    s.createList('o', 'Other', [{ userId: 'o', displayName: 'O' }]);
+    const res = await s.transportFor('o').push([{ table: T, row: { id: 'i1', title: 'X' } }]);
+    expect(res.rejected).toEqual([{ table: T, id: 'i1', reason: 'invalid' }]);
+    expect(s.row(T, 'i1')).toMatchObject({ title: 'A', list_id: L, updated_by: 'w' });
+  });
+
+  it("R3 ruling: another member's stored row with your own member column is not_allowed", async () => {
+    const { s, w, k, L } = setup();
+    await w.push([
+      { table: 'ww_test_pair', row: { id: 'p1', list_id: L, a_id: 'w', b_id: 'b', value: 1 } },
+    ]);
+    const res = await k.push([
+      { table: 'ww_test_pair', row: { id: 'p1', list_id: L, a_id: 'k', b_id: 'b', value: 9 } },
+    ]);
+    expect(res.rejected).toEqual([{ table: 'ww_test_pair', id: 'p1', reason: 'not_allowed' }]);
+    expect(res.accepted).toEqual([]);
+    expect(s.row('ww_test_pair', 'p1')).toMatchObject({ a_id: 'w', value: 1, updated_by: 'w' });
+  });
+
   it('R6 re-stamps a tombstone instead of reviving it (R9 answer)', async () => {
     const { s, w, k, L } = setup();
     await w.push([

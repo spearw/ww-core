@@ -9,4 +9,5 @@ export {
 export type { Sync, SyncLimits, SyncReport } from './engine';
 export { installSync } from './triggers';
 export { fromWire, toWire } from './codec';
+export { SYNC_CALL_TIMEOUT_MS, createSupabaseTransport } from './supabaseTransport';
 export type * from './types';

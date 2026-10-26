@@ -91,12 +91,19 @@ export function createFakeServer(opts: FakeServerOptions): FakeServer {
       if (!cols.has(key)) return 'unknown_column'; // R4
     }
     const stored = store.get(id);
-    const listId = (incoming['list_id'] ?? stored?.row['list_id']) as string | undefined;
-    if (listId === undefined) return 'invalid';
+    const own = ownColumns[change.table];
+    if (incoming['list_id'] === undefined) {
+      // A new row must name its list; a stored row the caller cannot see reads as absent
+      // (Postgres cannot tell "hidden" from "absent" without a probe), so both are invalid.
+      if (!stored || !isMember(stored.row['list_id'] as string, userId)) return 'invalid';
+    }
+    const listId = (incoming['list_id'] ?? stored?.row['list_id']) as string;
     if (!isMember(listId, userId)) return 'not_allowed'; // R2
     if (stored) {
       const storedList = stored.row['list_id'] as string;
       if (!isMember(storedList, userId)) return 'not_allowed'; // R2 (stored row's list)
+      // R3 on the stored row, before R5: Postgres's update policy filters it out first.
+      if (own !== undefined && stored.row[own] !== userId) return 'not_allowed';
       if (listId !== storedList) return 'list_moved'; // R5
     }
     const merged: WireRow = stored ? copy(stored.row) : {};
@@ -105,8 +112,7 @@ export function createFakeServer(opts: FakeServerOptions): FakeServer {
     } else {
       for (const [k, v] of Object.entries(incoming)) merged[k] = copy(v); // R7
     }
-    const own = ownColumns[change.table];
-    if (own !== undefined && merged[own] !== userId) return 'not_allowed'; // R3
+    if (own !== undefined && merged[own] !== userId) return 'not_allowed'; // R3 (submitted)
     merged['id'] = id;
     merged['list_id'] = listId;
     const next = ++seq; // R8
