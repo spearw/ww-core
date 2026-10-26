@@ -47,3 +47,16 @@ it('refuses a bookkeeping table as a synced table', () => {
     'ww_sync: ww_outbox is a package bookkeeping table',
   );
 });
+it('installing again replaces an older trigger of the same name', () => {
+  db.run(sql`drop trigger "ww_out_ww_test_item_ins"`);
+  db.run(
+    sql.raw(
+      `CREATE TRIGGER "ww_out_ww_test_item_ins" AFTER INSERT ON "ww_test_item" BEGIN SELECT 1; END`,
+    ),
+  );
+  insertItem(db, { id: 'old', title: 'A' });
+  expect(outbox(db)).toEqual([]);
+  installSync(db, [testItem]);
+  insertItem(db, { id: 'new', title: 'A' });
+  expect(outbox(db).map((e) => e.row_id)).toEqual(['new']);
+});

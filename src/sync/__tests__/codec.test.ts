@@ -64,4 +64,37 @@ describe('wire codec', () => {
       fromWire(testItem, { id: 'i1', deleted_at: '2026-10-25T10:00:00.5+00:00' }).deleted_at,
     ).toBe('2026-10-25T10:00:00.500Z');
   });
+
+  it('lowercases the id both ways', () => {
+    expect(toWire(testItem, { id: 'AB-CD', list_id: 'L' })).toEqual({ id: 'ab-cd', list_id: 'L' });
+    expect(fromWire(testItem, { id: 'AB-CD' })).toEqual({ id: 'ab-cd' });
+  });
+
+  it.each([
+    ['2026-10-26 10:00:00.123456+00', '2026-10-26T10:00:00.123Z'],
+    ['2026-10-26T10:00:00.123456+00:00', '2026-10-26T10:00:00.123Z'],
+    ['2026-10-26T10:00:00Z', '2026-10-26T10:00:00.000Z'],
+    ['2026-10-26T12:30:00.9999+02:30', '2026-10-26T10:00:00.999Z'],
+    ['2026-10-26 05:00:00-05', '2026-10-26T10:00:00.000Z'],
+  ])('normalises %s without parsing more than 3 fractional digits', (wire, local) => {
+    expect(fromWire(testItem, { id: 'i1', updated_at: wire }).updated_at).toBe(local);
+  });
+
+  it('never hands a timestamp string to the Date parser (Hermes rejects microseconds)', () => {
+    const RealDate = Date;
+    class NoParseDate extends RealDate {
+      constructor(...args: unknown[]) {
+        if (typeof args[0] === 'string') throw new Error('test: Date parsed a string');
+        super(...(args as []));
+      }
+    }
+    global.Date = NoParseDate as DateConstructor;
+    try {
+      expect(
+        fromWire(testItem, { id: 'i1', deleted_at: '2026-10-26 10:00:00.123456+00' }).deleted_at,
+      ).toBe('2026-10-26T10:00:00.123Z');
+    } finally {
+      global.Date = RealDate;
+    }
+  });
 });

@@ -16,7 +16,15 @@ import { makeFakeWorld } from './fakeWorld';
 import { collectTranscripts, hookedTransport, normaliser, sid } from './scenarios';
 import type { TransportHooks } from './scenarios';
 import type { World } from './scenarios';
-import { countItems, cursorOf, freshDb, insertItem, outbox, updateTitle } from './testDb';
+import {
+  countItems,
+  cursorOf,
+  freshDb,
+  insertItem,
+  outbox,
+  softDelete,
+  updateTitle,
+} from './testDb';
 import { testItem, testPair } from './testSchema';
 
 let world: World | undefined;
@@ -316,4 +324,88 @@ it('the transcript normaliser rewrites ids only, never free text', () => {
   expect(n({ updated_at: 'x', deleted_at: '2026-01-02T00:00:00+00:00' })).toEqual({
     deleted_at: '2026-01-02T00:00:00.000Z',
   });
+});
+
+it('a personal list is never lost, never replaced, and its rows never push', async () => {
+  world = await makeFakeWorld();
+  const { will, listId } = world;
+  will.db.run(
+    sql`insert into ww_list (id, name, owner_id, is_personal) values ('personal', 'Me', 'w', 1)`,
+  );
+  insertItem(will.db, { id: sid(1), listId: 'personal' });
+  insertItem(will.db, { id: sid(2), listId: 'personal' });
+  insertItem(will.db, { id: sid(3), listId });
+  const r = await will.sync.run();
+  expect(r.listsLost).toEqual([]);
+  expect(r.settled).toBe(true);
+  const personal = will.db.all(
+    sql`select id from ww_test_item where list_id = 'personal' order by id`,
+  ) as { id: string }[];
+  expect(personal.map((p) => p.id)).toEqual([sid(1), sid(2)]);
+  expect(will.db.get(sql`select name, is_personal from ww_list where id = 'personal'`)).toEqual({
+    name: 'Me',
+    is_personal: 1,
+  });
+  const sent = will.pushLog.flatMap((p) => [...p.accepted, ...p.rejected]).map((c) => c.id);
+  expect(sent).toEqual([sid(3)]);
+  expect(outbox(will.db).map((e) => e.row_id)).toEqual([sid(1), sid(2)]);
+  expect(await world.serverRow('ww_test_item', sid(3))).not.toBeNull();
+  expect(await world.serverRow('ww_test_item', sid(1))).toBeNull();
+});
+
+it('an uppercase local id is pushed lowercase and becomes the one lowercase row', async () => {
+  world = await makeFakeWorld();
+  const { will, katie, listId } = world;
+  await will.sync.run();
+  const upper = 'AAAAAAAA-0000-4000-8000-0000000000BB';
+  insertItem(will.db, { id: upper, listId });
+  const r = await will.sync.run();
+  expect(r.pushed).toBe(1);
+  expect(r.settled).toBe(true);
+  expect(will.db.all(sql`select id from ww_test_item`)).toEqual([{ id: upper.toLowerCase() }]);
+  expect(outbox(will.db)).toEqual([]);
+  expect(await world.serverRow('ww_test_item', upper.toLowerCase())).not.toBeNull();
+  await katie.sync.run();
+  expect(katie.db.all(sql`select id from ww_test_item`)).toEqual([{ id: upper.toLowerCase() }]);
+});
+
+it('createSync refuses a database installSync has not prepared', async () => {
+  const db = await freshDb({ ...wwLocalTables, testItem });
+  expect(() =>
+    createSync({ db, tables: [testItem], transport: { push: jest.fn(), pull: jest.fn() } }),
+  ).toThrow('ww_sync: installSync has not run');
+});
+
+it('a pulled row whose id a pending uppercase local row holds is adopted, not duplicated', async () => {
+  world = await makeFakeWorld();
+  const { will, katie, listId } = world;
+  const upper = 'AAAAAAAA-0000-4000-8000-0000000000CC';
+  insertItem(katie.db, { id: upper.toLowerCase(), listId, title: 'katie' });
+  await katie.sync.run();
+  insertItem(will.db, { id: upper, listId, title: 'will' }); // waits: Will knows no list yet
+  const r = await will.sync.run();
+  expect(r.skipped).toBe(1);
+  expect(r.settled).toBe(true);
+  expect(will.db.all(sql`select id, title from ww_test_item`)).toEqual([
+    { id: upper.toLowerCase(), title: 'will' },
+  ]);
+  expect(outbox(will.db)).toEqual([]);
+  expect((await world.serverRow('ww_test_item', upper.toLowerCase()))!['title']).toBe('will');
+});
+
+it('a pulled tombstone over a pending uppercase local row leaves one deleted row', async () => {
+  world = await makeFakeWorld();
+  const { will, katie, listId } = world;
+  const upper = 'AAAAAAAA-0000-4000-8000-0000000000DD';
+  insertItem(katie.db, { id: upper.toLowerCase(), listId });
+  softDelete(katie.db, upper.toLowerCase());
+  await katie.sync.run();
+  insertItem(will.db, { id: upper, listId, title: 'will' });
+  const r = await will.sync.run();
+  expect(r.tombstoned).toBe(1);
+  expect(will.pushLog.flatMap((p) => p.accepted)).toEqual([]); // dropped, never pushed back
+  expect(will.db.all(sql`select id, deleted_at is not null as gone from ww_test_item`)).toEqual([
+    { id: upper.toLowerCase(), gone: 1 },
+  ]);
+  expect(outbox(will.db)).toEqual([]);
 });

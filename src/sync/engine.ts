@@ -42,6 +42,7 @@ interface OutboxEntry {
 }
 interface Sent {
   seq: number;
+  rowId: string; // the local id, as the outbox holds it (the wire id is lowercase)
   table: SQLiteTable;
   change: WireChange;
 }
@@ -89,6 +90,13 @@ export function createSync(opts: {
     assertSyncedTable(t);
     byName.set(name, t);
   }
+  let installed: unknown;
+  try {
+    installed = db.get(sql`SELECT applying FROM ww_sync_flag WHERE id = 1`);
+  } catch {
+    installed = undefined;
+  }
+  if (installed === undefined) throw new Error('ww_sync: installSync has not run');
   const pullLimit = opts.limits?.pullLimit ?? PULL_LIMIT;
   const maxPullPages = opts.limits?.maxPullPages ?? MAX_PULL_PAGES;
   const maxRounds = opts.limits?.maxRounds ?? MAX_ROUNDS;
@@ -104,14 +112,17 @@ export function createSync(opts: {
     });
   }
 
-  /** Outbox entries whose row exists and whose list is in ww_list, oldest seq first. */
+  /** Outbox entries whose row exists and whose list is a shared list in ww_list, oldest seq
+   *  first. A personal list (`is_personal = 1`) is phone-only: its rows are never pushable and
+   *  wait in the outbox (the server does not know the list either, so it would refuse them). */
   function pushable(q: SyncDb, limit: number): OutboxEntry[] {
     if (byName.size === 0) return [];
     const parts = [...byName.keys()].map(
       (n) =>
         sql`SELECT o.seq AS seq, o.table_name AS table_name, o.row_id AS row_id
             FROM ww_outbox o JOIN ${ident(n)} r ON r."id" = o.row_id
-            WHERE o.table_name = ${n} AND r."list_id" IN (SELECT id FROM ww_list)`,
+            WHERE o.table_name = ${n}
+              AND r."list_id" IN (SELECT id FROM ww_list WHERE is_personal = 0)`,
     );
     const rows = q.all(
       sql`${sql.join(parts, sql` UNION ALL `)} ORDER BY seq LIMIT ${limit}`,
@@ -124,6 +135,26 @@ export function createSync(opts: {
       sql`SELECT seq FROM ww_outbox WHERE table_name = ${table} AND row_id = ${id}`,
     ) as { seq: number } | undefined;
     return r === undefined ? undefined : Number(r.seq);
+  }
+
+  /** The pending entry of a pulled (lowercase) id, also when the local row is uppercase. */
+  function pendingEntry(q: SyncDb, table: string, id: string): { rowId: string } | undefined {
+    const r = q.get(
+      sql`SELECT row_id FROM ww_outbox WHERE table_name = ${table}
+          AND row_id IN (${id}, ${id.toUpperCase()}) ORDER BY row_id = ${id} DESC LIMIT 1`,
+    ) as { row_id: string } | undefined;
+    return r === undefined ? undefined : { rowId: r.row_id };
+  }
+
+  /** Inside `applying`: a local row whose id differs from the server's lowercase id takes the
+   *  server's id (and its outbox entry with it), so the answer never lands as a second row. */
+  function adoptId(tx: SyncDb, table: string, localId: string, id: string): void {
+    if (localId === id) return;
+    tx.run(sql`UPDATE OR REPLACE ${ident(table)} SET "id" = ${id} WHERE "id" = ${localId}`);
+    tx.run(
+      sql`UPDATE OR REPLACE ww_outbox SET row_id = ${id}
+          WHERE table_name = ${table} AND row_id = ${localId}`,
+    );
   }
 
   async function pushAll(report: SyncReport): Promise<void> {
@@ -141,10 +172,12 @@ export function createSync(opts: {
           const raw = tx.get(
             sql`SELECT * FROM ${ident(e.table_name)} WHERE "id" = ${e.row_id}`,
           ) as Row;
-          sent.set(keyOf(e.table_name, e.row_id), {
+          const row = toWire(table, raw);
+          sent.set(keyOf(e.table_name, String(row['id'])), {
             seq: e.seq,
+            rowId: e.row_id,
             table,
-            change: { table: e.table_name, row: toWire(table, raw) },
+            change: { table: e.table_name, row },
           });
         }
         return sent;
@@ -162,9 +195,10 @@ export function createSync(opts: {
           // The entry still has the seq that was sent: no local write since, so the server's
           // answer wins (a write refused by deletion-wins comes back as the tombstone at once).
           // Otherwise keep the entry and the local row; it pushes next round.
-          if (outboxSeq(tx, a.table, a.id) === s.seq) {
+          if (outboxSeq(tx, a.table, s.rowId) === s.seq) {
             tx.run(sql`DELETE FROM ww_outbox WHERE seq = ${s.seq}`);
             deleted += 1;
+            adoptId(tx, a.table, s.rowId, a.id);
             upsert(tx, s.table, fromWire(s.table, a.row));
           }
         }
@@ -173,11 +207,11 @@ export function createSync(opts: {
           const s = batch.get(keyOf(r.table, r.id));
           if (!s) continue;
           report.rejected += 1;
-          if (outboxSeq(tx, r.table, r.id) === s.seq) deleted += 1;
+          if (outboxSeq(tx, r.table, s.rowId) === s.seq) deleted += 1;
           tx.run(sql`DELETE FROM ww_outbox WHERE seq = ${s.seq}`);
           tx.run(
             sql`INSERT INTO ww_reject (table_name, row_id, reason, at)
-                VALUES (${r.table}, ${r.id}, ${r.reason}, ${at})`,
+                VALUES (${r.table}, ${s.rowId}, ${r.reason}, ${at})`,
           );
         }
         return deleted > 0;
@@ -210,7 +244,17 @@ export function createSync(opts: {
     const listIds = new Set(lists.map((l) => l.id));
 
     applying((tx) => {
-      const known = (tx.all(sql`SELECT id FROM ww_list`) as { id: string }[]).map((r) => r.id);
+      // A personal list (is_personal = 1) is phone-only: never lost, never replaced by the pull.
+      const known = (
+        tx.all(sql`SELECT id FROM ww_list WHERE is_personal = 0`) as { id: string }[]
+      ).map((r) => r.id);
+      const personal = new Set(
+        (tx.all(sql`SELECT id FROM ww_list WHERE is_personal = 1`) as { id: string }[]).map(
+          (r) => r.id,
+        ),
+      );
+      const shared = lists.filter((l) => !personal.has(l.id));
+      const sharedIds = new Set(shared.map((l) => l.id));
       for (const lost of known.filter((id) => !listIds.has(id))) {
         for (const n of byName.keys()) {
           tx.run(sql`DELETE FROM ${ident(n)} WHERE "list_id" = ${lost}`);
@@ -219,12 +263,15 @@ export function createSync(opts: {
         report.listsLost.push(lost);
       }
 
-      // Replace ww_list and ww_list_member with `lists` (the phone-only is_personal is kept).
+      // Replace the shared lists and their members with `lists`; personal ones stay as they are.
       for (const id of known) {
         if (!listIds.has(id)) tx.run(sql`DELETE FROM ww_list WHERE id = ${id}`);
       }
-      tx.run(sql`DELETE FROM ww_list_member`);
-      for (const l of lists) {
+      tx.run(
+        sql`DELETE FROM ww_list_member
+            WHERE list_id NOT IN (SELECT id FROM ww_list WHERE is_personal = 1)`,
+      );
+      for (const l of shared) {
         tx.run(
           sql`INSERT INTO ww_list (id, name, owner_id) VALUES (${l.id}, ${l.name}, ${l.ownerId})
               ON CONFLICT (id) DO UPDATE SET name = excluded.name, owner_id = excluded.owner_id`,
@@ -239,15 +286,18 @@ export function createSync(opts: {
 
       for (const page of pages) {
         const rows: PulledRow[] = page.changes
-          .filter((c) => listIds.has(c.listId))
+          .filter((c) => sharedIds.has(c.listId))
           .flatMap((c) => c.rows)
           .sort((x, y) => x.seq - y.seq);
         for (const pulled of rows) {
           const table = byName.get(pulled.table);
           if (!table) continue; // a newer server's table
-          const id = pulled.row['id'];
-          if (typeof id !== 'string') continue;
-          const pending = outboxSeq(tx, pulled.table, id) !== undefined;
+          const rawId = pulled.row['id'];
+          if (typeof rawId !== 'string') continue;
+          const id = rawId.toLowerCase();
+          const entry = pendingEntry(tx, pulled.table, id);
+          const pending = entry !== undefined;
+          if (entry) adoptId(tx, pulled.table, entry.rowId, id);
           if (pulled.row['deleted_at'] != null) {
             // A deletion is final (R6): a pending local edit of a deleted row can never win, so
             // it is dropped rather than pushed back forever.
@@ -268,7 +318,7 @@ export function createSync(opts: {
         }
       }
 
-      for (const l of lists) {
+      for (const l of shared) {
         const seq = cursors[l.id];
         if (seq === undefined) continue;
         tx.run(
