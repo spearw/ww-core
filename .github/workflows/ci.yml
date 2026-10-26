@@ -38,3 +38,18 @@ jobs:
         run: |
           python tools/oracle/quiz_golden.py
           git diff --exit-code -- src/quiz/__fixtures__/weights-golden.json
+  server:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: supabase start
+      - run: npm ci
+      - run: npm run test:db
+      - run: npm run test:integration
